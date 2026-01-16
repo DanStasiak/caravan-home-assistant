@@ -5,11 +5,16 @@
 **Version:** `v1.0.0`  
 **Scope:** **Travel trailers / caravans with a single axle (two wheels)**
 
-This package provides a calibrated leveling system using **two IMU sensors**:
-- **Front Left (FL)** – mounted just in front of the left tire
-- **Front Right (FR)** – mounted just in front of the right tire
+This package provides a calibrated **front‑axle leveling assistant** using **two IMU sensors**:
+- **Front Left (FL)** – mounted just in front of the left tire  
+- **Front Right (FR)** – mounted just in front of the right tire  
 
-It produces a single combined front-axle leveling status (**LEVEL / ATTENTION / ALARM**), plus actionable guidance and a calibration wizard.
+It produces a single combined front‑axle leveling status (**LEVEL / ATTENTION / ALARM**), plus actionable guidance and a calibration wizard.
+
+> ⚠️ This is a **manual guidance system**.  
+> ❌ No actuator control  
+> ❌ No automatic leveling  
+> ❌ No motorhomes / no 4‑point systems
 
 ---
 
@@ -33,15 +38,15 @@ It produces a single combined front-axle leveling status (**LEVEL / ATTENTION / 
 
 ### Front Right (FR)
 - **MCU:** ESP8266 NodeMCU v2  
-- **IMU:** GY-521 / **MPU6050** (I²C)  
+- **IMU:** GY‑521 / **MPU6050** (I²C)  
 - **Optional ambient sensor:** **SHT3x** (I²C, shared bus)  
-- **Enclosure:** Custom 3D-printed case + top (STL)
+- **Enclosure:** Custom 3D‑printed case + top (STL)
 
 ### Front Left (FL)
 - **MCU:** **ESP32 Dev Module**  
-- **IMU:** GY-521 / **MPU6050** (I²C)  
+- **IMU:** GY‑521 / **MPU6050** (I²C)  
 - **Optional ambient sensor:** **SHT3x** (I²C, shared bus)  
-- **Enclosure:** Custom 3D-printed case + top (STL)
+- **Enclosure:** Custom 3D‑printed case + top (STL)
 
 ---
 
@@ -53,41 +58,31 @@ It produces a single combined front-axle leveling status (**LEVEL / ATTENTION / 
 
 ---
 
-## 📦 HACS Frontend Plugins (Required)
+## 📦 Frontend Plugins (Required)
 
-Install via **HACS → Frontend**:
+Install via **HACS → Frontend** (these are UI cards only):
 
-- Mushroom Cards  
+- **Mushroom Cards**  
   https://github.com/piitaya/lovelace-mushroom
 
-- bar-card  
+- **bar-card**  
   https://github.com/custom-cards/bar-card
 
-- card-mod  
+- **card-mod**  
   https://github.com/thomasloven/lovelace-card-mod
 
 Restart Home Assistant after installation.
 
 ---
 
-## 📦 Install via HACS (as a Package Repo)
+## 🧩 Installation (Home Assistant YAML Package)
 
-This repository is structured so HACS can install it as a **custom integration** (wrapper), while the actual functionality lives in YAML packages / blueprints / Lovelace YAML / ESPHome YAML.
+This package is **not installed via HACS**.  
+It is a **YAML package** meant to live inside your Home Assistant configuration.
 
 ### Steps
-1. In Home Assistant, open **HACS → Integrations**
-2. **⋮ (top right) → Custom repositories**
-3. Add your repository URL and choose category **Integration**
-4. Install **Caravan Leveling (Travel Trailer)**
-5. Restart Home Assistant
 
-> The integration is a wrapper to make the repo HACS-installable. You still need to copy the YAML package into your config (next section).
-
----
-
-## 🧩 Installation (HA YAML Package)
-
-1. Copy this folder to your HA config:
+1. Copy this folder into your HA config:
    ```
    packages/caravan_leveling/
    ```
@@ -102,74 +97,81 @@ This repository is structured so HACS can install it as a **custom integration**
 
 ---
 
-## 🧩 Auto‑Discovery Instructions (ESPHome → Stable Entity IDs)
+## 🧩 ESPHome Auto‑Discovery & Stable Entity IDs
 
-To make this package work out-of-the-box, the ESPHome nodes must produce the expected entity IDs.
+To work out‑of‑the‑box, the ESPHome nodes must expose **expected entity IDs**.
 
-### Recommended approach (best)
-- Use the ESPHome YAML files shipped in `esphome/`:
-  - `esphome/caravan_level_front_right_fr.yaml`
-  - `esphome/caravan_level_front_left_fl.yaml`
+### Recommended (best)
+Use the ESPHome YAML files provided in this repository:
+- `esphome/caravan_level_front_right_fr.yaml`
+- `esphome/caravan_level_front_left_fl.yaml`
 
-These names ensure Home Assistant creates the expected entities, e.g.:
+These produce entities such as:
 - `sensor.caravan_level_front_right_fr_pitch_level_ref`
 - `sensor.caravan_level_front_left_fl_pitch_level_ref`
-- (and their roll / tilt / buttons)
+- calibration buttons and roll/tilt sensors
 
-### If you already have devices
-Rename the ESPHome device names to match:
-- `caravan_level_front_right_fr`
-- `caravan_level_front_left_fl`
-
-Then either:
-- restart Home Assistant, or
-- remove and re-add the ESPHome device if entity IDs are not regenerated as expected.
+### Existing devices
+If you already have nodes:
+- Rename ESPHome devices to:
+  - `caravan_level_front_right_fr`
+  - `caravan_level_front_left_fl`
+- Restart Home Assistant (or re‑add the ESPHome device)
 
 ---
 
 ## 🖥 Lovelace UI
 
-Import the views from:
+Import the provided views:
 - `lovelace/caravan-level.yaml`
 - `lovelace/caravan-level-calibration.yaml`
+
+These views are mobile‑first and optimized for outdoor use.
 
 ---
 
 ## 🔔 Notifications (Blueprint)
 
-Blueprint included:
+Included blueprint:
 - `blueprints/automation/caravan_leveling_notify.yaml`
 
-It notifies on **ATTENTION / ALARM** (optional recovered-to-LEVEL), supports:
-- suppression while moving
-- simple cooldown
-- includes a dashboard path in the message
+Features:
+- Alerts on **ATTENTION / ALARM**
+- Optional recovery notification
+- Suppression while moving
+- Simple cooldown
+- Deep link to the leveling dashboard
 
 ---
 
-## 🧱 3D-Printed Enclosure (STL)
+## 🧱 3D‑Printed Enclosure (STL)
 
-Place your files here:
+Place STL files here:
 ```
 stl/
 ├─ caravan_level_sensor_case.stl
 └─ caravan_level_sensor_top.stl
 ```
 
-Printing recommendations:
-- PETG or ABS (PLA not recommended for caravans)
-- 0.2 mm layer height, ≥3 perimeters
+Printing notes:
+- PETG or ABS recommended (PLA not ideal for caravans)
+- 0.2 mm layer height, ≥3 perimeters
 - Rigid mounting (no foam between IMU and case)
 
 ---
 
 ## 🚫 Scope (By Design)
 
-This project is intentionally limited to **travel trailers / caravans with a single axle**.  
-No 4-point or motorized leveling systems are supported or planned.
+This package is intentionally limited to **single‑axle travel trailers**.
+
+- No 4‑point leveling
+- No motorized actuators
+- No motorhomes
+
+This keeps the system **safe, predictable, and portable**.
 
 ---
 
-## Versioning
+## 🏷 Versioning
 
 - **v1.0.0** – Front axle leveling (FL + FR), calibration wizard, Lovelace UI
