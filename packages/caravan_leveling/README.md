@@ -23,23 +23,9 @@ It produces a single combined front-axle leveling status (**LEVEL / ATTENTION / 
 
 ---
 
-## 🧭 System Overview
+## 🧾 Wiring Diagram (SVG)
 
-**Front axle layout (single axle / two wheels):**
-
-```
-FRONT OF TRAILER
-┌───────────────────────────────┐
-│                               │
-│   [ FL SENSOR ]   [ FR SENSOR ]│
-│     (left)          (right)   │
-│                               │
-└───────── O ───────── O ────────┘
-          Left        Right
-          Wheel       Wheel
-```
-
-The sensors measure pitch/roll relative to a calibrated reference. Home Assistant combines both into a reliable front leveling result.
+![Wiring diagram](./docs/wiring.svg)
 
 ---
 
@@ -49,59 +35,13 @@ The sensors measure pitch/roll relative to a calibrated reference. Home Assistan
 - **MCU:** ESP8266 NodeMCU v2  
 - **IMU:** GY-521 / **MPU6050** (I²C)  
 - **Optional ambient sensor:** **SHT3x** (I²C, shared bus)  
-- **Enclosure:** Custom 3D‑printed case + top (STL)
+- **Enclosure:** Custom 3D-printed case + top (STL)
 
 ### Front Left (FL)
 - **MCU:** **ESP32 Dev Module**  
 - **IMU:** GY-521 / **MPU6050** (I²C)  
 - **Optional ambient sensor:** **SHT3x** (I²C, shared bus)  
-- **Enclosure:** Custom 3D‑printed case + top (STL)
-
----
-
-## 🧱 3D‑Printed Enclosure (STL)
-
-```
-stl/
-├─ caravan_level_sensor_case.stl
-└─ caravan_level_sensor_top.stl
-```
-
-**Printing recommendations**
-- PETG or ABS (PLA not recommended for caravans)
-- 0.2 mm layer height
-- ≥3 perimeters
-- Rigid mounting (no foam between IMU and case)
-
-> ⚠️ Sensor orientation must not change after calibration.
-
----
-
-## 🔌 Wiring Diagrams
-
-### ESP8266 (NodeMCU v2) ↔ MPU6050
-
-```
-NodeMCU (ESP8266)     MPU6050
------------------------------
-3V3  ---------------> VCC
-GND  ---------------> GND
-D2 (GPIO4) ---------> SDA
-D1 (GPIO5) ---------> SCL
-```
-
-### ESP32 ↔ MPU6050
-
-```
-ESP32                 MPU6050
------------------------------
-3V3  ---------------> VCC
-GND  ---------------> GND
-GPIO21 -------------> SDA
-GPIO22 -------------> SCL
-```
-
-SHT3x (optional) shares the same I²C bus.
+- **Enclosure:** Custom 3D-printed case + top (STL)
 
 ---
 
@@ -130,48 +70,29 @@ Restart Home Assistant after installation.
 
 ---
 
-## 🧠 What This Package Provides
+## 📦 Install via HACS (as a Package Repo)
 
-### Sensors
-- `sensor.caravan_front_level_state`
-- `sensor.caravan_front_tilt_max`
-- `sensor.caravan_front_pitch_avg`
-- `sensor.caravan_front_roll_avg`
+This repository is structured so HACS can install it as a **custom integration** (wrapper), while the actual functionality lives in YAML packages / blueprints / Lovelace YAML / ESPHome YAML.
 
-### Scripts
-- `script.caravan_front_level_set_reference`
-- `script.caravan_front_level_reset_reference`
-- `script.caravan_front_level_calibration_wizard`
+### Steps
+1. In Home Assistant, open **HACS → Integrations**
+2. **⋮ (top right) → Custom repositories**
+3. Add your repository URL and choose category **Integration**
+4. Install **Caravan Leveling (Travel Trailer)**
+5. Restart Home Assistant
 
-### UI
-- Level view
-- Calibration wizard view
-
-### ESPHome
-- Full YAML configs for FR (ESP8266) and FL (ESP32) nodes
+> The integration is a wrapper to make the repo HACS-installable. You still need to copy the YAML package into your config (next section).
 
 ---
 
-## 🧪 Calibration Flow
+## 🧩 Installation (HA YAML Package)
 
-1. Park trailer on visually level ground  
-2. Ensure trailer is not moving  
-3. Open **Level Calibration**  
-4. Press **One‑tap wizard** (Reset → wait → Set)
-
-Calibration timestamp is stored in:
-- `input_datetime.caravan_front_level_last_calibration`
-
----
-
-## 🧩 Installation
-
-1. Copy package:
+1. Copy this folder to your HA config:
    ```
    packages/caravan_leveling/
    ```
 
-2. Enable packages in `configuration.yaml`:
+2. Enable packages in `configuration.yaml` (once):
    ```yaml
    homeassistant:
      packages: !include_dir_named packages
@@ -179,22 +100,73 @@ Calibration timestamp is stored in:
 
 3. Restart Home Assistant
 
-4. Import Lovelace views from:
-   ```
-   packages/caravan_leveling/lovelace/
-   ```
+---
 
-5. Flash ESPHome nodes using configs in:
-   ```
-   packages/caravan_leveling/esphome/
-   ```
+## 🧩 Auto‑Discovery Instructions (ESPHome → Stable Entity IDs)
+
+To make this package work out-of-the-box, the ESPHome nodes must produce the expected entity IDs.
+
+### Recommended approach (best)
+- Use the ESPHome YAML files shipped in `esphome/`:
+  - `esphome/caravan_level_front_right_fr.yaml`
+  - `esphome/caravan_level_front_left_fl.yaml`
+
+These names ensure Home Assistant creates the expected entities, e.g.:
+- `sensor.caravan_level_front_right_fr_pitch_level_ref`
+- `sensor.caravan_level_front_left_fl_pitch_level_ref`
+- (and their roll / tilt / buttons)
+
+### If you already have devices
+Rename the ESPHome device names to match:
+- `caravan_level_front_right_fr`
+- `caravan_level_front_left_fl`
+
+Then either:
+- restart Home Assistant, or
+- remove and re-add the ESPHome device if entity IDs are not regenerated as expected.
+
+---
+
+## 🖥 Lovelace UI
+
+Import the views from:
+- `lovelace/caravan-level.yaml`
+- `lovelace/caravan-level-calibration.yaml`
+
+---
+
+## 🔔 Notifications (Blueprint)
+
+Blueprint included:
+- `blueprints/automation/caravan_leveling_notify.yaml`
+
+It notifies on **ATTENTION / ALARM** (optional recovered-to-LEVEL), supports:
+- suppression while moving
+- simple cooldown
+- includes a dashboard path in the message
+
+---
+
+## 🧱 3D-Printed Enclosure (STL)
+
+Place your files here:
+```
+stl/
+├─ caravan_level_sensor_case.stl
+└─ caravan_level_sensor_top.stl
+```
+
+Printing recommendations:
+- PETG or ABS (PLA not recommended for caravans)
+- 0.2 mm layer height, ≥3 perimeters
+- Rigid mounting (no foam between IMU and case)
 
 ---
 
 ## 🚫 Scope (By Design)
 
 This project is intentionally limited to **travel trailers / caravans with a single axle**.  
-No 4‑point or motorized leveling systems are supported or planned.
+No 4-point or motorized leveling systems are supported or planned.
 
 ---
 

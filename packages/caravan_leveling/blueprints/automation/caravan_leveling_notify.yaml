@@ -1,0 +1,132 @@
+blueprint:
+  name: Caravan Leveling - Notify on Attention/Alarm (Front Axle)
+  description: >
+    Travel trailer front-axle leveling notifications based on sensor.caravan_front_level_state.
+    Suppresses notifications while driving and supports a simple cooldown.
+  domain: automation
+  input:
+    level_state_sensor:
+      name: Front Level State Sensor
+      selector:
+        entity:
+          domain: sensor
+    moving_sensor:
+      name: Caravan Moving Sensor
+      description: Suppress notifications while moving.
+      selector:
+        entity:
+          domain: binary_sensor
+    notify_script:
+      name: Notify Script
+      description: Script that accepts fields: title, message, severity (e.g. script.caravan_notify)
+      selector:
+        entity:
+          domain: script
+    title:
+      name: Notification Title
+      default: Caravan
+      selector:
+        text: {}
+    view_path:
+      name: Lovelace Level View Path
+      description: Used in message for quick navigation (e.g. /lovelace/caravan-level)
+      default: /lovelace/caravan-level
+      selector:
+        text: {}
+    notify_on_attention:
+      name: Notify on ATTENTION
+      default: true
+      selector:
+        boolean: {}
+    notify_on_alarm:
+      name: Notify on ALARM
+      default: true
+      selector:
+        boolean: {}
+    notify_on_recovered:
+      name: Notify when recovered to LEVEL
+      default: false
+      selector:
+        boolean: {}
+    cooldown_minutes:
+      name: Cooldown (minutes)
+      description: Minimum minutes between notifications (any severity).
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 240
+          step: 1
+          mode: slider
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input level_state_sensor
+
+variables:
+  s_from: "{{ trigger.from_state.state if trigger.from_state else 'unknown' }}"
+  s_to: "{{ trigger.to_state.state if trigger.to_state else 'unknown' }}"
+  moving: "{{ is_state(!input moving_sensor, 'on') }}"
+  do_attention: !input notify_on_attention
+  do_alarm: !input notify_on_alarm
+  do_recovered: !input notify_on_recovered
+  cooldown: !input cooldown_minutes
+  level_url: !input view_path
+  lr: "{{ states('sensor.caravan_front_pitch_avg') }}"
+  fb: "{{ states('sensor.caravan_front_roll_avg') }}"
+  tilt: "{{ states('sensor.caravan_front_tilt_max') }}"
+  recently_notified: >
+    {% if cooldown|int(0) <= 0 %}
+      false
+    {% elif this.attributes.last_triggered is none %}
+      false
+    {% else %}
+      {{ (as_timestamp(now()) - as_timestamp(this.attributes.last_triggered)) < (cooldown|int * 60) }}
+    {% endif %}
+
+condition:
+  - condition: template
+    value_template: >
+      {{ not moving and not recently_notified and s_to in ['ATTENTION','ALARM','LEVEL'] }}
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ s_to == 'ATTENTION' and do_attention }}"
+        sequence:
+          - service: !input notify_script
+            data:
+              title: !input title
+              severity: attention
+              message: >
+                Front leveling needs attention.
+                LR={{ lr }}°, FB={{ fb }}°, Tilt={{ tilt }}°.
+                Open: {{ level_url }}
+      - conditions:
+          - condition: template
+            value_template: "{{ s_to == 'ALARM' and do_alarm }}"
+        sequence:
+          - service: !input notify_script
+            data:
+              title: !input title
+              severity: alarm
+              message: >
+                Front leveling ALARM.
+                LR={{ lr }}°, FB={{ fb }}°, Tilt={{ tilt }}°.
+                Open: {{ level_url }}
+      - conditions:
+          - condition: template
+            value_template: "{{ s_to == 'LEVEL' and s_from in ['ATTENTION','ALARM'] and do_recovered }}"
+        sequence:
+          - service: !input notify_script
+            data:
+              title: !input title
+              severity: info
+              message: >
+                Front leveling recovered to LEVEL.
+                LR={{ lr }}°, FB={{ fb }}°, Tilt={{ tilt }}°.
+                Open: {{ level_url }}
