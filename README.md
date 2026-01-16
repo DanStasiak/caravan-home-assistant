@@ -3,13 +3,15 @@
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.0%2B-blue.svg)](https://www.home-assistant.io/)
 [![ESPHome](https://img.shields.io/badge/ESPHome-Supported-green.svg)](https://esphome.io/)
+[![License](https://img.shields.io/github/license/DanStasiak/caravan-home-assistant)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/DanStasiak/caravan-home-assistant)](https://github.com/DanStasiak/caravan-home-assistant/commits/main)
 
 ### Smart Mobile Trailer platform powered by Home Assistant  
 **Reference implementation: Hobby Excellent 540 FU (2019)**
 
 Turn a **travel trailer (caravan / Wohnwagen)** into a **fully monitored, remotely accessible, and extensible smart system** using **Home Assistant**, **ESPHome**, and open standards.
 
-This repository is a **real, running system**, not a demo.  
+This repository represents a **real, running system**, not a demo or concept.  
 It is designed to be **easily adapted** to other travel trailers by adjusting hardware mappings and entity names.
 
 > ✅ Designed for **travel trailers**  
@@ -24,55 +26,66 @@ It is designed to be **easily adapted** to other travel trailers by adjusting ha
   - Battery voltage, current, SOC
   - Charging & power availability
   - Alerts and thresholds
-  - Prepared for AGM → LiFePO₄ upgrades  
+  - Prepared for AGM → LiFePO₄ upgrades
 
 - 🌡️ **Climate & Zones**
   - Sleeping, living, kitchen, bathroom
   - Outside temperature
   - Alerting & summaries
-  - Prepared for Truma Bluetooth integration  
+  - Prepared for Truma Bluetooth integration
 
 - 💡 **Lighting**
   - Centralized logic
-  - Zigbee-first approach  
+  - Zigbee-first approach
 
 - 🚰 **Water monitoring**
   - Fresh-water tank level
   - No drilling required
-  - ESPHome-based continuous percentage  
+  - ESPHome-based continuous percentage
 
 - 📍 **GPS & Location**
   - Automatic GPS device_tracker detection
-  - Location awareness & display  
+  - Location awareness & display
 
 - 📶 **Connectivity**
   - WAN monitoring
   - Starlink + LTE failover awareness
-  - GL.iNet router integration  
+  - GL.iNet router integration
 
 - 📊 **Mobile-first dashboards**
   - Clean UI
   - Touch-friendly
-  - Severity-based status model  
+  - Severity-based status model
 
 - 🔔 **Notifications & Alerts**
   - Central notification abstraction
   - Push + optional TTS
   - Quiet hours & suppression
-  - Severity-aware behavior  
+  - Severity-aware behavior
 
 - 📐 **Leveling (travel trailer safe)**
   - Front-only leveling
   - ESPHome IMU
-  - Calibration UI  
+  - Calibration UI
 
 - 🧩 **ESPHome nodes**
   - Modular ESP32 configs
   - OTA-ready
-  - Reusable patterns  
+  - Reusable patterns
 
 - 🖨️ **3D-printed enclosures**
-  - Custom cases for ESP & sensors  
+  - Custom cases for ESP & sensors
+
+---
+
+## 📸 Screenshots
+
+> Screenshots will be added soon:
+> - Caravan Mobile dashboard
+> - Power overview
+> - Climate zones
+> - Connectivity status
+> - Leveling calibration
 
 ---
 
@@ -93,9 +106,13 @@ Home Assistant runs **locally inside the caravan** and acts as the central brain
 This repository is a **package-style Home Assistant project**.  
 HACS is used as a **distribution & update mechanism**.
 
-### Install via HACS
+### Install via HACS (recommended)
+
 1. Open **HACS → Integrations → ⋮ → Custom repositories**
-2. Add: `https://github.com/DanStasiak/caravan-home-assistant`
+2. Add:  
+   ```
+   https://github.com/DanStasiak/caravan-home-assistant
+   ```
 3. Category: **Integration**
 4. Install and restart Home Assistant
 
@@ -110,21 +127,37 @@ HACS is used as a **distribution & update mechanism**.
 
 ---
 
+## 🔧 Adapting to other caravans
+
+Reusable as-is:
+- dashboards
+- notification & alert framework
+- connectivity logic
+- ESPHome patterns
+
+Trailer-specific adjustments:
+- lighting zones
+- water tank wiring
+- sensor placement
+- entity naming
+
+---
+
 ## 🚧 Project status
 
 - Core systems: **Production**
 - Some integrations: **Lab / evolving**
-- Actively developed and used in real travel
+- Actively developed and used during real travel
 
 ---
 
 ## ⚠️ Disclaimer
 
 DIY project. No warranty.  
-You are responsible for electrical safety, compliance, and hardware changes.
+You are responsible for electrical safety, regulatory compliance, and hardware changes.
 
 ---
 
 ## 🤝 Contributing
 
-Issues and PRs are welcome—especially improvements that make adaptation to other trailers easier.
+Issues and pull requests are welcome—especially improvements that make adaptation to other caravans easier.
