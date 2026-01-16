@@ -1,8 +1,8 @@
 # 🚐 Caravan Home Assistant
 
-![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)
-![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.0%2B-blue.svg)
-![ESPHome](https://img.shields.io/badge/ESPHome-Supported-green.svg)
+[![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.0%2B-blue.svg)](https://www.home-assistant.io/)
+[![ESPHome](https://img.shields.io/badge/ESPHome-Supported-green.svg)](https://esphome.io/)
 
 ### Smart Mobile Trailer platform powered by Home Assistant  
 **Reference implementation: Hobby Excellent 540 FU (2019)**
@@ -25,65 +25,54 @@ It is designed to be **easily adapted** to other travel trailers by adjusting ha
   - Charging & power availability
   - Alerts and thresholds
   - Prepared for AGM → LiFePO₄ upgrades  
-  👉 `packages/power`
 
 - 🌡️ **Climate & Zones**
   - Sleeping, living, kitchen, bathroom
   - Outside temperature
   - Alerting & summaries
   - Prepared for Truma Bluetooth integration  
-  👉 `packages/climate`
 
 - 💡 **Lighting**
   - Centralized logic
   - Zigbee-first approach  
-  👉 `packages/lighting`
 
 - 🚰 **Water monitoring**
   - Fresh-water tank level
   - No drilling required
   - ESPHome-based continuous percentage  
-  👉 `packages/water`
 
 - 📍 **GPS & Location**
   - Automatic GPS device_tracker detection
   - Location awareness & display  
-  👉 `packages/gps`
 
 - 📶 **Connectivity**
   - WAN monitoring
   - Starlink + LTE failover awareness
   - GL.iNet router integration  
-  👉 `packages/connectivity`
 
 - 📊 **Mobile-first dashboards**
   - Clean UI
   - Touch-friendly
   - Severity-based status model  
-  👉 `dashboards`
 
 - 🔔 **Notifications & Alerts**
   - Central notification abstraction
   - Push + optional TTS
   - Quiet hours & suppression
   - Severity-aware behavior  
-  👉 `packages/alerts`
 
 - 📐 **Leveling (travel trailer safe)**
   - Front-only leveling
   - ESPHome IMU
   - Calibration UI  
-  👉 `packages/leveling`
 
 - 🧩 **ESPHome nodes**
   - Modular ESP32 configs
   - OTA-ready
   - Reusable patterns  
-  👉 `esphome`
 
 - 🖨️ **3D-printed enclosures**
   - Custom cases for ESP & sensors  
-  👉 `hardware/stl`
 
 ---
 
