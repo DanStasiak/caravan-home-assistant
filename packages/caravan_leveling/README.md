@@ -1,9 +1,12 @@
-# 🚐 Travel Trailer Leveling (Front Axle) – Home Assistant Package
+# 📐 Travel Trailer Leveling (Front Axle) – Home Assistant Package
 
 **Repository:** `caravan-home-assistant`  
 **Package:** `caravan_leveling`  
-**Version:** `v1.0.0`  
+**Version:** `v1.1.0`  
 **Scope:** **Travel trailers / caravans with a single axle (two wheels)**
+
+🔗 **Project root:**  
+https://github.com/DanStasiak/caravan-home-assistant
 
 This package provides a calibrated **front‑axle leveling assistant** using **two IMU sensors**:
 - **Front Left (FL)** – mounted just in front of the left tire  
@@ -11,7 +14,7 @@ This package provides a calibrated **front‑axle leveling assistant** using **t
 
 It produces a single combined front‑axle leveling status (**LEVEL / ATTENTION / ALARM**), plus actionable guidance and a calibration wizard.
 
-> ⚠️ This is a **manual guidance system**.  
+> ⚠️ This is a **manual guidance system**  
 > ❌ No actuator control  
 > ❌ No automatic leveling  
 > ❌ No motorhomes / no 4‑point systems
@@ -25,6 +28,37 @@ It produces a single combined front‑axle leveling status (**LEVEL / ATTENTION 
 
 ### Calibration Wizard
 ![Calibration view](./screenshots/level-calibration.png)
+
+---
+
+## 🧭 Architecture (Leveling Package)
+
+```
+        ┌───────────────┐
+        │   ESP32 /     │
+        │   ESP8266     │
+        │   (ESPHome)   │
+        └───────┬───────┘
+                │ I²C
+        ┌───────▼───────┐
+        │     IMU       │
+        │  MPU6050 etc  │
+        └───────┬───────┘
+                │ WiFi
+        ┌───────▼─────────────┐
+        │   Home Assistant    │
+        │  - Template sensors │
+        │  - Helpers          │
+        │  - Calibration      │
+        │  - Lovelace UI      │
+        └─────────────────────┘
+```
+
+**Data flow**
+1. IMUs measure pitch/roll
+2. ESPHome exposes sensors
+3. Home Assistant stores a *level reference*
+4. UI shows deviation + status
 
 ---
 
@@ -58,16 +92,14 @@ It produces a single combined front‑axle leveling status (**LEVEL / ATTENTION 
 
 ---
 
-## 📦 Frontend Plugins (Required)
+## 📦 Frontend Plugins (UI only)
 
-Install via **HACS → Frontend** (these are UI cards only):
+Install via **HACS → Frontend**:
 
 - **Mushroom Cards**  
   https://github.com/piitaya/lovelace-mushroom
-
 - **bar-card**  
   https://github.com/custom-cards/bar-card
-
 - **card-mod**  
   https://github.com/thomasloven/lovelace-card-mod
 
@@ -78,75 +110,68 @@ Restart Home Assistant after installation.
 ## 🧩 Installation (Home Assistant YAML Package)
 
 This package is **not installed via HACS**.  
-It is a **YAML package** meant to live inside your Home Assistant configuration.
+It is a **YAML package** placed inside your HA config.
 
 ### Steps
 
-1. Copy this folder into your HA config:
+1. Copy this folder:
    ```
    packages/caravan_leveling/
    ```
-
-2. Enable packages in `configuration.yaml` (once):
+2. Ensure packages are enabled:
    ```yaml
    homeassistant:
      packages: !include_dir_named packages
    ```
-
 3. Restart Home Assistant
 
 ---
 
 ## 🧩 ESPHome Auto‑Discovery & Stable Entity IDs
 
-To work out‑of‑the‑box, the ESPHome nodes must expose **expected entity IDs**.
-
 ### Recommended (best)
-Use the ESPHome YAML files provided in this repository:
+Use the provided ESPHome files:
 - `esphome/caravan_level_front_right_fr.yaml`
 - `esphome/caravan_level_front_left_fl.yaml`
 
-These produce entities such as:
+This guarantees stable entities such as:
 - `sensor.caravan_level_front_right_fr_pitch_level_ref`
 - `sensor.caravan_level_front_left_fl_pitch_level_ref`
-- calibration buttons and roll/tilt sensors
 
 ### Existing devices
-If you already have nodes:
-- Rename ESPHome devices to:
-  - `caravan_level_front_right_fr`
-  - `caravan_level_front_left_fl`
-- Restart Home Assistant (or re‑add the ESPHome device)
+Rename ESPHome device names to:
+- `caravan_level_front_right_fr`
+- `caravan_level_front_left_fl`
+Then restart Home Assistant.
 
 ---
 
 ## 🖥 Lovelace UI
 
-Import the provided views:
+Import:
 - `lovelace/caravan-level.yaml`
 - `lovelace/caravan-level-calibration.yaml`
 
-These views are mobile‑first and optimized for outdoor use.
+Mobile‑first, outdoor‑readable, large touch targets.
 
 ---
 
 ## 🔔 Notifications (Blueprint)
 
-Included blueprint:
+Blueprint:
 - `blueprints/automation/caravan_leveling_notify.yaml`
 
 Features:
 - Alerts on **ATTENTION / ALARM**
 - Optional recovery notification
 - Suppression while moving
-- Simple cooldown
-- Deep link to the leveling dashboard
+- Cooldown logic
+- Deep link to leveling dashboard
 
 ---
 
 ## 🧱 3D‑Printed Enclosure (STL)
 
-Place STL files here:
 ```
 stl/
 ├─ caravan_level_sensor_case.stl
@@ -154,19 +179,43 @@ stl/
 ```
 
 Printing notes:
-- PETG or ABS recommended (PLA not ideal for caravans)
-- 0.2 mm layer height, ≥3 perimeters
-- Rigid mounting (no foam between IMU and case)
+- PETG or ABS recommended
+- 0.2 mm layer height
+- ≥3 perimeters
+- Rigid mounting (no foam)
+
+---
+
+## ⚠️ Common Mistakes & Troubleshooting
+
+### ❌ IMU mounted loosely
+➡️ Causes drifting and inconsistent readings  
+✔️ Mount rigidly to the caravan structure
+
+### ❌ Wrong IMU orientation
+➡️ Front/back axis inverted  
+✔️ Adjust axis mapping in ESPHome YAML
+
+### ❌ Calibrating on uneven ground
+➡️ “Level” reference becomes wrong  
+✔️ Always calibrate on a known level surface
+
+### ❌ Re‑using old reference after hardware change
+➡️ Offsets no longer valid  
+✔️ Reset and recalibrate after any sensor move
+
+### ❌ Expecting automatic leveling
+➡️ This is manual guidance only  
+✔️ Adjust jockey wheel / ramps yourself
 
 ---
 
 ## 🚫 Scope (By Design)
 
-This package is intentionally limited to **single‑axle travel trailers**.
-
-- No 4‑point leveling
-- No motorized actuators
+- Single‑axle travel trailers only
 - No motorhomes
+- No motorized actuators
+- No 4‑point leveling
 
 This keeps the system **safe, predictable, and portable**.
 
@@ -174,4 +223,12 @@ This keeps the system **safe, predictable, and portable**.
 
 ## 🏷 Versioning
 
-- **v1.0.0** – Front axle leveling (FL + FR), calibration wizard, Lovelace UI
+- **v1.1.0**
+  - Documentation polish
+  - Architecture diagram
+  - Troubleshooting section
+  - Root README cross‑link
+- **v1.0.0**
+  - Front axle leveling (FL + FR)
+  - Calibration wizard
+  - Lovelace UI
