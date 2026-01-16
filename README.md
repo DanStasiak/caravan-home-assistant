@@ -4,56 +4,153 @@
 
 Turn a **travel trailer (caravan / Wohnwagen)** into a **fully monitored, remotely accessible, and extensible smart system** using **Home Assistant**, **ESPHome**, and open standards.
 
-This repository is a **complete solution / reference architecture**, not a Home Assistant integration or HACS component.
+This repository is a **complete solution / reference architecture**, not a Home Assistant integration or HACS component.  
+It documents a **real, running system**, built incrementally and used in practice.
 
 > ✅ Designed for **travel trailers**  
 > ❌ Not intended for motorhomes  
-> ❌ No 4-point leveling logic (front-only leveling)
+> ❌ No 4‑point leveling logic (front‑only leveling)
 
 ---
 
-## ✨ What this project is
+## ✨ Project philosophy
 
-This project documents and implements a **real, running Mobile Assistant** inside a travel trailer.
+This project follows a few clear principles:
 
-It combines:
-- Home Assistant OS
-- ESPHome (ESP32-based nodes)
-- Zigbee (Zigbee2MQTT)
-- Bluetooth (GPS, future Truma integration)
-- YAML-first configuration
-- Git-managed structure
-
-The result is a **mobile-first smart caravan system** covering monitoring, control, and alerting.
+- **System, not gadget** – this is a complete caravan automation stack
+- **Mobile‑first UX** – dashboards optimized for phones & tablets
+- **YAML‑first** – no click‑ops, everything version‑controlled
+- **Vendor‑neutral** – ESPHome, Zigbee, MQTT, Bluetooth
+- **Safe by design** – no unsafe automation (especially leveling)
+- **Adaptable** – Hobby is the reference, not a hard requirement
 
 ---
 
-## ✅ Implemented components (current)
+## 🧠 Architecture overview
 
-### 📐 Caravan Leveling (travel-trailer safe)
-Front-only leveling designed specifically for travel trailers:
-- ESPHome IMU-based sensors
-- Reset / set-level calibration workflow
-- Dedicated mobile Lovelace view
+Home Assistant runs **locally inside the caravan** and acts as the central brain.
 
-👉 Package: `packages/caravan_leveling`
+Typical setup:
+- Raspberry Pi 4 running Home Assistant OS
+- ESP32 nodes running ESPHome
+- Zigbee coordinator + Zigbee2MQTT
+- Bluetooth adapters / ESPHome BT proxies
+- Local LAN with optional remote access
+
+All logic is implemented using **Home Assistant packages**, templates, scripts, and dashboards –  
+**no custom Python integration required**.
 
 ---
 
-## 🧭 Roadmap (planned / in progress)
+## 🧩 Implemented & planned subsystems
 
-The following modules are part of the project vision and will be added incrementally:
+### 📐 Leveling (travel‑trailer safe) — *implemented*
+Front‑only leveling designed specifically for travel trailers:
+- ESPHome IMU‑based sensors
+- Set‑level & reset calibration workflow
+- Dedicated Lovelace UI
+- Manual guidance only (no actuator automation)
 
-- ⚡ Power & Energy (battery, SOC, charging, alerts)
-- 🌡️ Climate & Zones (sleeping / living / kitchen / bathroom)
-- 💡 Lighting (Zigbee-first)
-- 🚰 Water monitoring (no drilling solutions)
-- 📍 GPS & Location (auto-detection)
-- 📶 Connectivity (Starlink + LTE failover)
-- 🔔 Notifications (push + optional TTS, quiet hours)
-- 📊 Mobile-first dashboards
-- 🧩 ESPHome node library
-- 🖨️ 3D-printed enclosures
+📁 Package: `packages/caravan_leveling`
+
+---
+
+### ⚡ Power & Energy — *in progress*
+Power monitoring and alerting focused on off‑grid usage:
+- Battery voltage, current, SOC
+- Charging state awareness
+- Threshold‑based alerts
+- Prepared for AGM → LiFePO₄ upgrades
+- Designed to integrate chargers, DC‑DC, solar later
+
+---
+
+### 🌡️ Climate & Zones — *in progress*
+Comfort and safety monitoring:
+- Multiple interior zones (sleeping, living, kitchen, bathroom)
+- Outside temperature
+- Trend‑based alerts (too cold / too hot)
+- Prepared for Truma heater integration (Bluetooth path)
+
+---
+
+### 💡 Lighting — *planned*
+Centralized lighting control:
+- Zigbee‑first approach
+- Grouped by zones
+- Manual override always possible
+- Easily adaptable to different caravan layouts
+
+---
+
+### 🚰 Water monitoring — *planned*
+Fresh‑water tank level monitoring:
+- No drilling solutions preferred
+- ESPHome‑based
+- Continuous percentage calculation
+- Works with common multi‑probe tanks
+
+---
+
+### 📍 GPS & Location — *planned*
+Location awareness for a mobile system:
+- Automatic GPS device detection
+- Location display & status
+- Foundation for geofencing & travel modes
+
+---
+
+### 📶 Connectivity — *planned*
+Connectivity visibility and diagnostics:
+- WAN status monitoring
+- Starlink + LTE failover awareness
+- Router state integration (GL.iNet)
+- Clear “online / degraded / offline” states
+
+---
+
+### 🔔 Notifications & Alerts — *planned*
+Central notification framework:
+- Push notifications
+- Optional TTS
+- Quiet hours
+- Suppression / maintenance mode
+- Severity‑based behavior
+
+---
+
+### 📊 Dashboards & UX — *ongoing*
+Mobile‑first dashboards:
+- Caravan overview
+- Power
+- Climate
+- Connectivity
+- Leveling
+- Maintenance / diagnostics
+
+UX follows a simple severity model:
+- 🟢 OK
+- 🟧 Attention
+- 🔴 Alarm
+
+---
+
+### 🧩 ESPHome node library — *ongoing*
+Reusable ESPHome patterns:
+- Modular ESP32 nodes
+- OTA‑ready
+- Clean entity naming
+- Designed for reuse across caravans
+
+---
+
+### 🖨️ 3D‑printed enclosures — *ongoing*
+Custom enclosures for ESP & sensors:
+- STL files included
+- Designed for caravan environment
+- Easy mounting & service access
+
+📁 Folder: `hardware/`
 
 ---
 
@@ -66,23 +163,10 @@ Screenshots will be added once the main dashboards are finalized:
 
 ---
 
-## 🧠 Architecture overview
-
-Home Assistant runs **locally inside the caravan** and acts as the central brain.
-
-Typical setup:
-- Raspberry Pi 4 running Home Assistant OS
-- ESP32 nodes running ESPHome
-- Zigbee coordinator + Zigbee2MQTT
-- Bluetooth adapters / proxies
-
-All logic is implemented in **YAML packages**, not Python integrations.
-
----
-
 ## 📦 Installation (manual)
 
-This repository is **not HACS-installable by design**.
+This repository is **not HACS‑installable by design**.  
+It is intended to be **cloned or copied** into an existing Home Assistant setup.
 
 ### Installation steps
 
@@ -90,7 +174,7 @@ This repository is **not HACS-installable by design**.
    ```bash
    git clone https://github.com/DanStasiak/caravan-home-assistant.git
    ```
-2. Copy the following folders into your Home Assistant `/config` directory:
+2. Copy the relevant folders into your Home Assistant `/config` directory:
    - `packages/`
    - `dashboards/`
    - `templates/`
@@ -113,28 +197,28 @@ homeassistant:
 
 ---
 
-## 🔎 Auto-discovery behavior
+## 🔎 Auto‑discovery behavior
 
 - **ESPHome** devices are discovered automatically via mDNS / native API
 - **Zigbee2MQTT** devices appear via MQTT discovery
-- **Bluetooth** devices appear via native adapters or ESPHome Bluetooth proxies
-- **Dashboards** are provided as YAML and can be imported manually
+- **Bluetooth** devices appear via native adapters or ESPHome BT proxies
+- **Dashboards** are provided as YAML and can be imported or included manually
 
 ---
 
 ## 🔧 Adapting to other caravans
 
 Reusable across most travel trailers:
-- dashboards
-- alert & notification logic
-- connectivity monitoring
+- Dashboards
+- Notification & alert logic
+- Connectivity monitoring
 - ESPHome patterns
 
-Trailer-specific adjustments:
-- lighting zones
-- water tank wiring
-- sensor placement
-- entity naming
+Trailer‑specific adjustments:
+- Lighting zones
+- Water tank wiring
+- Sensor placement
+- Entity naming conventions
 
 The **Hobby Excellent 540 FU** is the reference, not a limitation.
 
@@ -142,22 +226,26 @@ The **Hobby Excellent 540 FU** is the reference, not a limitation.
 
 ## 🚧 Project status
 
-- Leveling module: **Production**
-- Other modules: **Roadmap / active development**
+- Leveling: **Production**
+- Other subsystems: **Active development**
+- Used during real travel and continuously refined
 
 ---
 
 ## ⚠️ Disclaimer
 
-DIY project. No warranty.
+This is a DIY project.
 
 You are responsible for:
 - Electrical safety
 - Regulatory compliance
 - Hardware modifications
 
+Provided **as‑is**, without warranty.
+
 ---
 
 ## 🤝 Contributing
 
-Issues, discussions, and pull requests are welcome — especially improvements that make the system easier to adapt to other travel trailers.
+Issues, discussions, and pull requests are welcome —  
+especially improvements that make the system easier to adapt to other travel trailers.
