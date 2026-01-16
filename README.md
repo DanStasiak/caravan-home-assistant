@@ -20,72 +20,37 @@ It is designed to be **easily adapted** to other travel trailers by adjusting ha
 
 ---
 
-## ✨ What this project delivers
+## ✅ Implemented (in this repository)
 
-- ⚡ **Power & Energy**
-  - Battery voltage, current, SOC
-  - Charging & power availability
-  - Alerts and thresholds
-  - Prepared for AGM → LiFePO₄ upgrades
+### 📐 Caravan Leveling (travel-trailer safe)
+Front-only leveling package for travel trailers:
+- IMU-based sensors (ESPHome)
+- Reset / set-level calibration flow
+- Mobile-first Lovelace view
 
-- 🌡️ **Climate & Zones**
-  - Sleeping, living, kitchen, bathroom
-  - Outside temperature
-  - Alerting & summaries
-  - Prepared for Truma Bluetooth integration
+👉 **Package:** [`packages/caravan_leveling`](packages/caravan_leveling)
 
-- 💡 **Lighting**
-  - Centralized logic
-  - Zigbee-first approach
+---
 
-- 🚰 **Water monitoring**
-  - Fresh-water tank level
-  - No drilling required
-  - ESPHome-based continuous percentage
+## 🧭 Roadmap (planned / in progress)
 
-- 📍 **GPS & Location**
-  - Automatic GPS device_tracker detection
-  - Location awareness & display
-
-- 📶 **Connectivity**
-  - WAN monitoring
-  - Starlink + LTE failover awareness
-  - GL.iNet router integration
-
-- 📊 **Mobile-first dashboards**
-  - Clean UI
-  - Touch-friendly
-  - Severity-based status model
-
-- 🔔 **Notifications & Alerts**
-  - Central notification abstraction
-  - Push + optional TTS
-  - Quiet hours & suppression
-  - Severity-aware behavior
-
-- 📐 **Leveling (travel trailer safe)**
-  - Front-only leveling
-  - ESPHome IMU
-  - Calibration UI
-
-- 🧩 **ESPHome nodes**
-  - Modular ESP32 configs
-  - OTA-ready
-  - Reusable patterns
-
-- 🖨️ **3D-printed enclosures**
-  - Custom cases for ESP & sensors
+These are core goals of the project and will be added as packages/modules:
+- ⚡ Power & Energy (battery, SOC, charging, alerts)
+- 🌡️ Climate & zones (sleeping/living/kitchen/bathroom + outside)
+- 💡 Lighting (Zigbee-first)
+- 🚰 Water monitoring (no drilling)
+- 📍 GPS & location (auto-detect tracker)
+- 📶 Connectivity (Starlink + LTE + router state)
+- 🔔 Notifications framework (push + optional TTS, quiet hours, suppression)
+- 📊 Mobile-first dashboards for each subsystem
+- 🧩 ESPHome node library + 3D-printable enclosures
 
 ---
 
 ## 📸 Screenshots
-
-> Screenshots will be added soon:
-> - Caravan Mobile dashboard
-> - Power overview
-> - Climate zones
-> - Connectivity status
-> - Leveling calibration
+Screenshots will be added soon:
+- Caravan Mobile dashboard
+- Leveling calibration view
 
 ---
 
@@ -104,17 +69,52 @@ Home Assistant runs **locally inside the caravan** and acts as the central brain
 ## 📦 Installation (HACS-ready)
 
 This repository is a **package-style Home Assistant project**.  
-HACS is used as a **distribution & update mechanism**.
+HACS can be used as a **distribution & update mechanism**.
 
-### Install via HACS (recommended)
+### Install via HACS (custom repo)
 
 1. Open **HACS → Integrations → ⋮ → Custom repositories**
-2. Add:  
+2. Add:
    ```
    https://github.com/DanStasiak/caravan-home-assistant
    ```
 3. Category: **Integration**
-4. Install and restart Home Assistant
+4. Install / Download
+5. Copy the repo folders into your HA `/config` (see “File layout”)
+6. Restart Home Assistant
+
+> Note: This repo is not a classic `custom_components/<domain>` integration.  
+> It’s a **configuration repo** (packages/dashboards/etc.) distributed via HACS.
+
+---
+
+## 🗂️ File layout
+
+Expected Home Assistant structure:
+
+```
+/config
+  /packages
+  /dashboards
+  /templates
+  /scripts
+  /esphome
+  /hardware
+  /docs
+```
+
+This repo mirrors that layout intentionally.
+
+---
+
+## ⚙️ Required Home Assistant configuration
+
+Enable packages in `configuration.yaml`:
+
+```yaml
+homeassistant:
+  packages: !include_dir_merge_named packages
+```
 
 ---
 
@@ -123,7 +123,7 @@ HACS is used as a **distribution & update mechanism**.
 - **ESPHome**: discovered automatically via mDNS / ESPHome API
 - **Zigbee2MQTT**: devices appear via MQTT discovery
 - **Bluetooth**: via native adapter or ESPHome Bluetooth proxy
-- **Dashboards**: YAML dashboards included under `dashboards/`
+- **Dashboards**: YAML dashboards will be included under `dashboards/`
 
 ---
 
@@ -143,10 +143,21 @@ Trailer-specific adjustments:
 
 ---
 
+## 🧾 Repo “About” settings (recommended for HACS listing quality)
+
+In GitHub, open your repo and use the **right sidebar “About”** box:
+
+- **Description (suggested):**  
+  *Smart Mobile Trailer platform for Home Assistant (Hobby Excellent 540 FU reference)*
+- **Topics (suggested):**  
+  `home-assistant`, `hacs`, `esphome`, `caravan`, `wohnwagen`, `travel-trailer`, `hobby`, `iot`, `zigbee`, `mqtt`
+
+---
+
 ## 🚧 Project status
 
-- Core systems: **Production**
-- Some integrations: **Lab / evolving**
+- Leveling: **Production**
+- Other modules: **Roadmap / in progress**
 - Actively developed and used during real travel
 
 ---
