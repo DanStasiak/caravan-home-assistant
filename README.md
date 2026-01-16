@@ -1,18 +1,10 @@
 # 🚐 Caravan Home Assistant
-
-[![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.0%2B-blue.svg)](https://www.home-assistant.io/)
-[![ESPHome](https://img.shields.io/badge/ESPHome-Supported-green.svg)](https://esphome.io/)
-[![License](https://img.shields.io/github/license/DanStasiak/caravan-home-assistant)](LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/DanStasiak/caravan-home-assistant)](https://github.com/DanStasiak/caravan-home-assistant/commits/main)
-
 ### Smart Mobile Trailer platform powered by Home Assistant  
 **Reference implementation: Hobby Excellent 540 FU (2019)**
 
 Turn a **travel trailer (caravan / Wohnwagen)** into a **fully monitored, remotely accessible, and extensible smart system** using **Home Assistant**, **ESPHome**, and open standards.
 
-This repository represents a **real, running system**, not a demo or concept.  
-It is designed to be **easily adapted** to other travel trailers by adjusting hardware mappings and entity names.
+This repository is a **complete solution / reference architecture**, not a Home Assistant integration or HACS component.
 
 > ✅ Designed for **travel trailers**  
 > ❌ Not intended for motorhomes  
@@ -20,37 +12,57 @@ It is designed to be **easily adapted** to other travel trailers by adjusting ha
 
 ---
 
-## ✅ Implemented (in this repository)
+## ✨ What this project is
+
+This project documents and implements a **real, running Mobile Assistant** inside a travel trailer.
+
+It combines:
+- Home Assistant OS
+- ESPHome (ESP32-based nodes)
+- Zigbee (Zigbee2MQTT)
+- Bluetooth (GPS, future Truma integration)
+- YAML-first configuration
+- Git-managed structure
+
+The result is a **mobile-first smart caravan system** covering monitoring, control, and alerting.
+
+---
+
+## ✅ Implemented components (current)
 
 ### 📐 Caravan Leveling (travel-trailer safe)
-Front-only leveling package for travel trailers:
-- IMU-based sensors (ESPHome)
-- Reset / set-level calibration flow
-- Mobile-first Lovelace view
+Front-only leveling designed specifically for travel trailers:
+- ESPHome IMU-based sensors
+- Reset / set-level calibration workflow
+- Dedicated mobile Lovelace view
 
-👉 **Package:** [`packages/caravan_leveling`](packages/caravan_leveling)
+👉 Package: `packages/caravan_leveling`
 
 ---
 
 ## 🧭 Roadmap (planned / in progress)
 
-These are core goals of the project and will be added as packages/modules:
+The following modules are part of the project vision and will be added incrementally:
+
 - ⚡ Power & Energy (battery, SOC, charging, alerts)
-- 🌡️ Climate & zones (sleeping/living/kitchen/bathroom + outside)
+- 🌡️ Climate & Zones (sleeping / living / kitchen / bathroom)
 - 💡 Lighting (Zigbee-first)
-- 🚰 Water monitoring (no drilling)
-- 📍 GPS & location (auto-detect tracker)
-- 📶 Connectivity (Starlink + LTE + router state)
-- 🔔 Notifications framework (push + optional TTS, quiet hours, suppression)
-- 📊 Mobile-first dashboards for each subsystem
-- 🧩 ESPHome node library + 3D-printable enclosures
+- 🚰 Water monitoring (no drilling solutions)
+- 📍 GPS & Location (auto-detection)
+- 📶 Connectivity (Starlink + LTE failover)
+- 🔔 Notifications (push + optional TTS, quiet hours)
+- 📊 Mobile-first dashboards
+- 🧩 ESPHome node library
+- 🖨️ 3D-printed enclosures
 
 ---
 
 ## 📸 Screenshots
-Screenshots will be added soon:
-- Caravan Mobile dashboard
-- Leveling calibration view
+
+Screenshots will be added once the main dashboards are finalized:
+- Caravan Mobile overview
+- Leveling calibration
+- Power & climate views
 
 ---
 
@@ -58,30 +70,35 @@ Screenshots will be added soon:
 
 Home Assistant runs **locally inside the caravan** and acts as the central brain.
 
-- Home Assistant OS (Raspberry Pi 4)
-- ESPHome (ESP32 sensors & actuators)
-- Zigbee (via Zigbee2MQTT)
-- Bluetooth (GPS, future Truma integration)
-- YAML-first, Git-managed configuration
+Typical setup:
+- Raspberry Pi 4 running Home Assistant OS
+- ESP32 nodes running ESPHome
+- Zigbee coordinator + Zigbee2MQTT
+- Bluetooth adapters / proxies
+
+All logic is implemented in **YAML packages**, not Python integrations.
 
 ---
 
-## 🗂️ File layout
+## 📦 Installation (manual)
 
-Expected Home Assistant structure:
+This repository is **not HACS-installable by design**.
 
-```
-/config
-  /packages
-  /dashboards
-  /templates
-  /scripts
-  /esphome
-  /hardware
-  /docs
-```
+### Installation steps
 
-This repo mirrors that layout intentionally.
+1. Clone or download the repository:
+   ```bash
+   git clone https://github.com/DanStasiak/caravan-home-assistant.git
+   ```
+2. Copy the following folders into your Home Assistant `/config` directory:
+   - `packages/`
+   - `dashboards/`
+   - `templates/`
+   - `scripts/`
+   - `esphome/`
+   - `hardware/`
+   - `docs/`
+3. Restart Home Assistant
 
 ---
 
@@ -96,21 +113,21 @@ homeassistant:
 
 ---
 
-## 🔎 Auto-discovery
+## 🔎 Auto-discovery behavior
 
-- **ESPHome**: discovered automatically via mDNS / ESPHome API
-- **Zigbee2MQTT**: devices appear via MQTT discovery
-- **Bluetooth**: via native adapter or ESPHome Bluetooth proxy
-- **Dashboards**: YAML dashboards will be included under `dashboards/`
+- **ESPHome** devices are discovered automatically via mDNS / native API
+- **Zigbee2MQTT** devices appear via MQTT discovery
+- **Bluetooth** devices appear via native adapters or ESPHome Bluetooth proxies
+- **Dashboards** are provided as YAML and can be imported manually
 
 ---
 
 ## 🔧 Adapting to other caravans
 
-Reusable as-is:
+Reusable across most travel trailers:
 - dashboards
-- notification & alert framework
-- connectivity logic
+- alert & notification logic
+- connectivity monitoring
 - ESPHome patterns
 
 Trailer-specific adjustments:
@@ -119,34 +136,28 @@ Trailer-specific adjustments:
 - sensor placement
 - entity naming
 
----
-
-## 🧾 Repo “About” settings (recommended for HACS listing quality)
-
-In GitHub, open your repo and use the **right sidebar “About”** box:
-
-- **Description (suggested):**  
-  *Smart Mobile Trailer platform for Home Assistant (Hobby Excellent 540 FU reference)*
-- **Topics (suggested):**  
-  `home-assistant`, `hacs`, `esphome`, `caravan`, `wohnwagen`, `travel-trailer`, `hobby`, `iot`, `zigbee`, `mqtt`
+The **Hobby Excellent 540 FU** is the reference, not a limitation.
 
 ---
 
 ## 🚧 Project status
 
-- Leveling: **Production**
-- Other modules: **Roadmap / in progress**
-- Actively developed and used during real travel
+- Leveling module: **Production**
+- Other modules: **Roadmap / active development**
 
 ---
 
 ## ⚠️ Disclaimer
 
-DIY project. No warranty.  
-You are responsible for electrical safety, regulatory compliance, and hardware changes.
+DIY project. No warranty.
+
+You are responsible for:
+- Electrical safety
+- Regulatory compliance
+- Hardware modifications
 
 ---
 
 ## 🤝 Contributing
 
-Issues and pull requests are welcome—especially improvements that make adaptation to other caravans easier.
+Issues, discussions, and pull requests are welcome — especially improvements that make the system easier to adapt to other travel trailers.
