@@ -66,28 +66,6 @@ Home Assistant runs **locally inside the caravan** and acts as the central brain
 
 ---
 
-## 📦 Installation (HACS-ready)
-
-This repository is a **package-style Home Assistant project**.  
-HACS can be used as a **distribution & update mechanism**.
-
-### Install via HACS (custom repo)
-
-1. Open **HACS → Integrations → ⋮ → Custom repositories**
-2. Add:
-   ```
-   https://github.com/DanStasiak/caravan-home-assistant
-   ```
-3. Category: **Integration**
-4. Install / Download
-5. Copy the repo folders into your HA `/config` (see “File layout”)
-6. Restart Home Assistant
-
-> Note: This repo is not a classic `custom_components/<domain>` integration.  
-> It’s a **configuration repo** (packages/dashboards/etc.) distributed via HACS.
-
----
-
 ## 🗂️ File layout
 
 Expected Home Assistant structure:
