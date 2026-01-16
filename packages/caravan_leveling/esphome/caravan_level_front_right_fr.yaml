@@ -1,0 +1,242 @@
+esphome:
+  name: caravan_level_front_right_fr
+  friendly_name: "Caravan Level – Front Right (FR)"
+  comment: "Front Right: ESP8266 NodeMCU v2 + MPU6050 (GY-521) + SHT3x (optional)"
+
+esp8266:
+  board: nodemcuv2
+
+logger:
+
+api:
+  reboot_timeout: 0s
+
+ota:
+  platform: esphome
+
+wifi:
+  ssid: !secret wlan_ssid
+  password: !secret wlan_password
+  ap:
+    ssid: "caravan-level-fr-fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+substitutions:
+  attention_deg: "1.5"
+  alarm_deg: "2.5"
+  sht3x_addr: "0x44"
+  mpu_addr: "0x68"
+
+i2c:
+  sda: D2   # GPIO4
+  scl: D1   # GPIO5
+  scan: true
+  frequency: 100kHz
+
+globals:
+  - id: pitch_offset
+    type: float
+    restore_value: true
+    initial_value: "0.0"
+  - id: roll_offset
+    type: float
+    restore_value: true
+    initial_value: "0.0"
+
+sensor:
+  # Optional ambient sensor (shares I2C bus)
+  - platform: sht3xd
+    address: ${sht3x_addr}
+    temperature:
+      name: "FR Ambient Temperature"
+      id: amb_temp
+      accuracy_decimals: 1
+      filters:
+        - sliding_window_moving_average:
+            window_size: 6
+            send_every: 1
+    humidity:
+      name: "FR Ambient Humidity"
+      id: amb_hum
+      accuracy_decimals: 1
+      filters:
+        - sliding_window_moving_average:
+            window_size: 6
+            send_every: 1
+    heater_enabled: false
+    update_interval: 5s
+
+  - platform: mpu6050
+    address: ${mpu_addr}
+    update_interval: 100ms
+
+    accel_x:
+      name: "FR Accel X"
+      id: accel_x
+      unit_of_measurement: "m/s²"
+    accel_y:
+      name: "FR Accel Y"
+      id: accel_y
+      unit_of_measurement: "m/s²"
+    accel_z:
+      name: "FR Accel Z"
+      id: accel_z
+      unit_of_measurement: "m/s²"
+
+    gyro_x:
+      name: "FR Gyro X"
+      id: gyro_x
+      unit_of_measurement: "°/s"
+    gyro_y:
+      name: "FR Gyro Y"
+      id: gyro_y
+      unit_of_measurement: "°/s"
+    gyro_z:
+      name: "FR Gyro Z"
+      id: gyro_z
+      unit_of_measurement: "°/s"
+
+    temperature:
+      name: "FR IMU Temperature (Diagnostic)"
+      id: imu_temp
+      accuracy_decimals: 1
+
+  - platform: template
+    name: "FR Pitch Raw"
+    id: pitch_raw
+    unit_of_measurement: "°"
+    accuracy_decimals: 2
+    update_interval: 100ms
+    lambda: |-
+      const float ax = id(accel_x).state;
+      const float ay = id(accel_y).state;
+      const float az = id(accel_z).state;
+      if (isnan(ax) || isnan(ay) || isnan(az)) return NAN;
+      return atan2f(-ax, sqrtf(ay*ay + az*az)) * 180.0f / M_PI;
+    filters:
+      - exponential_moving_average:
+          alpha: 0.20
+
+  - platform: template
+    name: "FR Roll Raw"
+    id: roll_raw
+    unit_of_measurement: "°"
+    accuracy_decimals: 2
+    update_interval: 100ms
+    lambda: |-
+      const float ay = id(accel_y).state;
+      const float az = id(accel_z).state;
+      if (isnan(ay) || isnan(az)) return NAN;
+      return atan2f(ay, az) * 180.0f / M_PI;
+    filters:
+      - exponential_moving_average:
+          alpha: 0.20
+
+  - platform: template
+    name: "FR Pitch (Level-Ref)"
+    id: pitch_level
+    unit_of_measurement: "°"
+    accuracy_decimals: 2
+    update_interval: 100ms
+    lambda: |-
+      float p = id(pitch_raw).state;
+      if (isnan(p)) return NAN;
+      p = p - id(pitch_offset);
+      if (fabsf(p) < 0.20f) return 0.0f;
+      return p;
+    filters:
+      - delta: 0.10
+
+  - platform: template
+    name: "FR Roll (Level-Ref)"
+    id: roll_level
+    unit_of_measurement: "°"
+    accuracy_decimals: 2
+    update_interval: 100ms
+    lambda: |-
+      float r = id(roll_raw).state;
+      if (isnan(r)) return NAN;
+      r = r - id(roll_offset);
+      if (fabsf(r) < 0.20f) return 0.0f;
+      return r;
+    filters:
+      - delta: 0.10
+
+  - platform: template
+    name: "FR Tilt Magnitude (Level-Ref)"
+    id: tilt_mag
+    unit_of_measurement: "°"
+    accuracy_decimals: 2
+    update_interval: 100ms
+    lambda: |-
+      const float p = id(pitch_level).state;
+      const float r = id(roll_level).state;
+      if (isnan(p) || isnan(r)) return NAN;
+      return sqrtf(p*p + r*r);
+
+  - platform: wifi_signal
+    name: "FR WiFi Signal"
+    update_interval: 60s
+
+  - platform: uptime
+    name: "FR Uptime"
+    update_interval: 60s
+
+text_sensor:
+  - platform: version
+    name: "FR ESPHome Version"
+
+  - platform: wifi_info
+    ip_address:
+      name: "FR IP Address"
+    ssid:
+      name: "FR WiFi SSID"
+
+  - platform: template
+    name: "FR Level State"
+    update_interval: 100ms
+    lambda: |-
+      const float t = id(tilt_mag).state;
+      if (isnan(t)) return {"UNKNOWN"};
+      if (t >= atof("${alarm_deg}")) return {"ALARM"};
+      if (t >= atof("${attention_deg}")) return {"ATTENTION"};
+      return {"LEVEL"};
+
+binary_sensor:
+  - platform: status
+    name: "FR Device Status"
+
+  - platform: template
+    name: "FR Level Attention"
+    lambda: |-
+      const float t = id(tilt_mag).state;
+      if (isnan(t)) return false;
+      return t >= atof("${attention_deg}") && t < atof("${alarm_deg}");
+
+  - platform: template
+    name: "FR Level Alarm"
+    lambda: |-
+      const float t = id(tilt_mag).state;
+      if (isnan(t)) return false;
+      return t >= atof("${alarm_deg}");
+
+button:
+  - platform: template
+    name: "FR Set Current as Level Reference"
+    icon: mdi:spirit-level
+    on_press:
+      - lambda: |-
+          const float p = id(pitch_raw).state;
+          const float r = id(roll_raw).state;
+          if (!isnan(p)) id(pitch_offset) = p;
+          if (!isnan(r)) id(roll_offset) = r;
+
+  - platform: template
+    name: "FR Reset Level Reference"
+    icon: mdi:restore
+    on_press:
+      - lambda: |-
+          id(pitch_offset) = 0.0f;
+          id(roll_offset)  = 0.0f;

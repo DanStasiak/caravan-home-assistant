@@ -1,0 +1,475 @@
+title: Level
+path: caravan-level
+icon: mdi:spirit-level
+type: sections
+subview: true
+max_columns: 1
+dense_section_placement: true
+theme: Mushroom
+badges:
+  - type: custom:mushroom-chips-card
+    alignment: center
+    chips:
+      - type: template
+        entity: sensor.caravan_front_level_state
+        icon: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            mdi:alert
+          {% elif s == 'ATTENTION' %}
+            mdi:alert-circle
+          {% elif s == 'LEVEL' %}
+            mdi:check-circle
+          {% else %}
+            mdi:help-circle
+          {% endif %}
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        content: "{{ states('sensor.caravan_front_level_state') }}"
+        tap_action:
+          action: more-info
+          entity: sensor.caravan_front_tilt_max
+      - type: template
+        entity: sensor.caravan_front_pitch_avg
+        icon: mdi:swap-horizontal
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        content: >
+          {% set lr = states('sensor.caravan_front_pitch_avg')|float(none) %} {{
+          'LR %.0f°'|format(lr) if lr is not none else 'LR —' }}
+        tap_action:
+          action: more-info
+          entity: sensor.caravan_front_pitch_avg
+      - type: template
+        entity: sensor.caravan_front_roll_avg
+        icon: mdi:caravan
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        content: >
+          {% set fb = states('sensor.caravan_front_roll_avg')|float(none) %} {{
+          'FB %.0f°'|format(fb) if fb is not none else 'FB —' }}
+        tap_action:
+          action: more-info
+          entity: sensor.caravan_front_roll_avg
+      - type: template
+        icon: mdi:target
+        icon_color: blue
+        content: Set
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_set_reference
+      - type: template
+        icon: mdi:restore
+        icon_color: blue
+        content: Reset
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_reset_reference
+      - type: template
+        icon: mdi:wand
+        icon_color: blue
+        content: Wizard
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/caravan-level-calibration
+sections:
+  - type: grid
+    columns: 1
+    square: false
+    cards:
+      - type: heading
+        heading: Leveling
+        heading_style: title
+      - type: custom:mushroom-template-card
+        primary: "Level Status: {{ states('sensor.caravan_front_level_state') }}"
+        secondary: >
+          {% set t = states('sensor.caravan_front_tilt_max')|float(none) %} {%
+          if t is not none %}
+            Tilt magnitude (max): {{ '%.0f'|format(t) }} °
+          {% else %}
+            —
+          {% endif %}
+        icon: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            mdi:alert
+          {% elif s == 'ATTENTION' %}
+            mdi:alert-circle
+          {% elif s == 'LEVEL' %}
+            mdi:check-circle
+          {% else %}
+            mdi:help-circle
+          {% endif %}
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        layout: horizontal
+        tap_action:
+          action: more-info
+          entity: sensor.caravan_front_tilt_max
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+      - type: custom:mushroom-template-card
+        primary: What to do
+        secondary: >
+          {# AXIS MAPPING (confirmed):
+             Front↔Back = ROLL
+             Left↔Right = PITCH #}
+          {% set fb = states('sensor.caravan_front_roll_avg')|float(none) %} {%
+          set lr = states('sensor.caravan_front_pitch_avg')|float(none) %} {%
+          set tol = 0.5 %} {% if fb is none or lr is none %}
+            —
+          {% elif (-tol <= fb <= tol) and (-tol <= lr <= tol) %}
+            You're level ✅
+          {% else %}
+            {% if fb > tol %}
+              Front HIGH → raise back / lower front
+            {% elif fb < -tol %}
+              Front LOW → raise front / lower back
+            {% else %}
+              Front↔Back: LEVEL ✅
+            {% endif %}
+            {{ "\n" }}
+            {% if lr > tol %}
+              RIGHT LOW → raise right / lower left
+            {% elif lr < -tol %}
+              LEFT LOW → raise left / lower right
+            {% else %}
+              Left↔Right: LEVEL ✅
+            {% endif %}
+          {% endif %}
+        icon: mdi:format-list-checks
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+      - type: conditional
+        conditions:
+          - entity: sensor.caravan_front_level_state
+            state: ALARM
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:bar-card
+              name: Front ↔ Back (Avg)
+              entity_row: true
+              entities:
+                - entity: sensor.caravan_front_roll_avg
+                  name: Front ↔ Back
+                  icon: mdi:caravan
+              min: -10
+              max: 10
+              unit_of_measurement: °
+              decimal: 0
+              height: 26px
+              positions:
+                icon: inside
+                name: inside
+                value: inside
+                indicator: "off"
+              rounding: 12px
+              severity:
+                - from: -10
+                  to: -3
+                  color: red
+                - from: -3
+                  to: -1
+                  color: orange
+                - from: -1
+                  to: 1
+                  color: green
+                - from: 1
+                  to: 3
+                  color: orange
+                - from: 3
+                  to: 10
+                  color: red
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 18px;
+                    padding: 30px 12px 12px 12px;
+                    position: relative;
+                  }
+                  ha-card:before,
+                  ha-card:after {
+                    position: absolute;
+                    top: 8px;
+                    font-size: 12px;
+                    opacity: 0.85;
+                    letter-spacing: 0.08em;
+                    z-index: 10;
+                    pointer-events: none;
+                  }
+                  ha-card:before { content: "FRONT"; left: 12px; }
+                  ha-card:after  { content: "BACK";  right: 12px; }
+                  bar-card-backgroundbar {
+                    background: linear-gradient(
+                      to right,
+                      rgba(120,120,120,0.25) 0%,
+                      rgba(120,120,120,0.25) 49.5%,
+                      rgba(255,255,255,0.7) 49.5%,
+                      rgba(255,255,255,0.7) 50.5%,
+                      rgba(120,120,120,0.25) 50.5%,
+                      rgba(120,120,120,0.25) 100%
+                    ) !important;
+                  }
+            - type: custom:bar-card
+              name: Left ↔ Right (Avg)
+              entity_row: true
+              entities:
+                - entity: sensor.caravan_front_pitch_avg
+                  name: Left ↔ Right
+                  icon: mdi:swap-horizontal
+              min: -10
+              max: 10
+              unit_of_measurement: °
+              decimal: 0
+              height: 26px
+              positions:
+                icon: inside
+                name: inside
+                value: inside
+                indicator: "off"
+              rounding: 12px
+              severity:
+                - from: -10
+                  to: -3
+                  color: red
+                - from: -3
+                  to: -1
+                  color: orange
+                - from: -1
+                  to: 1
+                  color: green
+                - from: 1
+                  to: 3
+                  color: orange
+                - from: 3
+                  to: 10
+                  color: red
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 18px;
+                    padding: 30px 12px 12px 12px;
+                    position: relative;
+                  }
+                  ha-card:before,
+                  ha-card:after {
+                    position: absolute;
+                    top: 8px;
+                    font-size: 12px;
+                    opacity: 0.85;
+                    letter-spacing: 0.08em;
+                    z-index: 10;
+                    pointer-events: none;
+                  }
+                  ha-card:before { content: "LEFT";  left: 12px; }
+                  ha-card:after  { content: "RIGHT"; right: 12px; }
+                  bar-card-backgroundbar {
+                    background: linear-gradient(
+                      to right,
+                      rgba(120,120,120,0.25) 0%,
+                      rgba(120,120,120,0.25) 49.5%,
+                      rgba(255,255,255,0.7) 49.5%,
+                      rgba(255,255,255,0.7) 50.5%,
+                      rgba(120,120,120,0.25) 50.5%,
+                      rgba(120,120,120,0.25) 100%
+                    ) !important;
+                  }
+      - type: conditional
+        conditions:
+          - entity: sensor.caravan_front_level_state
+            state: ATTENTION
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:bar-card
+              name: Front ↔ Back (Avg)
+              entity_row: true
+              entities:
+                - entity: sensor.caravan_front_roll_avg
+                  name: Front ↔ Back
+                  icon: mdi:caravan
+              min: -10
+              max: 10
+              unit_of_measurement: °
+              decimal: 0
+              height: 26px
+              positions:
+                icon: inside
+                name: inside
+                value: inside
+                indicator: "off"
+              rounding: 12px
+              severity:
+                - from: -10
+                  to: -3
+                  color: red
+                - from: -3
+                  to: -1
+                  color: orange
+                - from: -1
+                  to: 1
+                  color: green
+                - from: 1
+                  to: 3
+                  color: orange
+                - from: 3
+                  to: 10
+                  color: red
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 18px;
+                    padding: 30px 12px 12px 12px;
+                    position: relative;
+                  }
+                  ha-card:before,
+                  ha-card:after {
+                    position: absolute;
+                    top: 8px;
+                    font-size: 12px;
+                    opacity: 0.85;
+                    letter-spacing: 0.08em;
+                    z-index: 10;
+                    pointer-events: none;
+                  }
+                  ha-card:before { content: "FRONT"; left: 12px; }
+                  ha-card:after  { content: "BACK";  right: 12px; }
+                  bar-card-backgroundbar {
+                    background: linear-gradient(
+                      to right,
+                      rgba(120,120,120,0.25) 0%,
+                      rgba(120,120,120,0.25) 49.5%,
+                      rgba(255,255,255,0.7) 49.5%,
+                      rgba(255,255,255,0.7) 50.5%,
+                      rgba(120,120,120,0.25) 50.5%,
+                      rgba(120,120,120,0.25) 100%
+                    ) !important;
+                  }
+            - type: custom:bar-card
+              name: Left ↔ Right (Avg)
+              entity_row: true
+              entities:
+                - entity: sensor.caravan_front_pitch_avg
+                  name: Left ↔ Right
+                  icon: mdi:swap-horizontal
+              min: -10
+              max: 10
+              unit_of_measurement: °
+              decimal: 0
+              height: 26px
+              positions:
+                icon: inside
+                name: inside
+                value: inside
+                indicator: "off"
+              rounding: 12px
+              severity:
+                - from: -10
+                  to: -3
+                  color: red
+                - from: -3
+                  to: -1
+                  color: orange
+                - from: -1
+                  to: 1
+                  color: green
+                - from: 1
+                  to: 3
+                  color: orange
+                - from: 3
+                  to: 10
+                  color: red
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 18px;
+                    padding: 30px 12px 12px 12px;
+                    position: relative;
+                  }
+                  ha-card:before,
+                  ha-card:after {
+                    position: absolute;
+                    top: 8px;
+                    font-size: 12px;
+                    opacity: 0.85;
+                    letter-spacing: 0.08em;
+                    z-index: 10;
+                    pointer-events: none;
+                  }
+                  ha-card:before { content: "LEFT";  left: 12px; }
+                  ha-card:after  { content: "RIGHT"; right: 12px; }
+                  bar-card-backgroundbar {
+                    background: linear-gradient(
+                      to right,
+                      rgba(120,120,120,0.25) 0%,
+                      rgba(120,120,120,0.25) 49.5%,
+                      rgba(255,255,255,0.7) 49.5%,
+                      rgba(255,255,255,0.7) 50.5%,
+                      rgba(120,120,120,0.25) 50.5%,
+                      rgba(120,120,120,0.25) 100%
+                    ) !important;
+                  }
+      - type: conditional
+        conditions:
+          - entity: sensor.caravan_front_level_state
+            state: LEVEL
+        card:
+          type: custom:mushroom-template-card
+          primary: Level ✅
+          secondary: No adjustment needed
+          icon: mdi:check-circle
+          icon_color: green
+          card_mod:
+            style: |
+              ha-card { border-radius: 18px; padding: 12px; }
+cards: []

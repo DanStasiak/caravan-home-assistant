@@ -1,0 +1,257 @@
+# =========================
+# Caravan Leveling Package
+# Version: 1.0.0
+# Sensors: FR + FL (front axle)
+# UI: Lovelace views shipped separately
+# =========================
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      pkg_version: &pkg_version "1.0.0"
+
+# Helper (must exist; you created this already — safe to keep here too)
+input_datetime:
+  caravan_front_level_last_calibration:
+    name: Caravan Front Level - Last Calibration
+    has_date: true
+    has_time: true
+
+template:
+  - sensor:
+      # -------------------------
+      # Combined Front Sensors
+      # -------------------------
+      - name: "Caravan Front Tilt (Max)"
+        unique_id: caravan_front_tilt_max
+        unit_of_measurement: "°"
+        icon: mdi:spirit-level
+        state: >
+          {% set fr = states('sensor.caravan_level_front_right_fr_tilt_magnitude_level_ref')|float(none) %}
+          {% set fl = states('sensor.caravan_level_front_left_fl_tilt_magnitude_level_ref')|float(none) %}
+          {% if fr is none and fl is none %}
+            {{ none }}
+          {% elif fr is none %}
+            {{ fl|round(2) }}
+          {% elif fl is none %}
+            {{ fr|round(2) }}
+          {% else %}
+            {{ [fr, fl] | max | round(2) }}
+          {% endif %}
+        attributes:
+          fr: "{{ states('sensor.caravan_level_front_right_fr_tilt_magnitude_level_ref') }}"
+          fl: "{{ states('sensor.caravan_level_front_left_fl_tilt_magnitude_level_ref') }}"
+          package_version: *pkg_version
+
+      - name: "Caravan Front Pitch (Avg)"
+        unique_id: caravan_front_pitch_avg
+        unit_of_measurement: "°"
+        icon: mdi:swap-horizontal
+        state: >
+          {% set fr = states('sensor.caravan_level_front_right_fr_pitch_level_ref')|float(none) %}
+          {% set fl = states('sensor.caravan_level_front_left_fl_pitch_level_ref')|float(none) %}
+          {% set vals = [] %}
+          {% if fr is not none %}{% set vals = vals + [fr] %}{% endif %}
+          {% if fl is not none %}{% set vals = vals + [fl] %}{% endif %}
+          {{ (vals|sum / (vals|length))|round(2) if vals|length > 0 else none }}
+        attributes:
+          package_version: *pkg_version
+
+      - name: "Caravan Front Roll (Avg)"
+        unique_id: caravan_front_roll_avg
+        unit_of_measurement: "°"
+        icon: mdi:caravan
+        state: >
+          {% set fr = states('sensor.caravan_level_front_right_fr_roll_level_ref')|float(none) %}
+          {% set fl = states('sensor.caravan_level_front_left_fl_roll_level_ref')|float(none) %}
+          {% set vals = [] %}
+          {% if fr is not none %}{% set vals = vals + [fr] %}{% endif %}
+          {% if fl is not none %}{% set vals = vals + [fl] %}{% endif %}
+          {{ (vals|sum / (vals|length))|round(2) if vals|length > 0 else none }}
+        attributes:
+          package_version: *pkg_version
+
+      # Thresholds are “hardcoded” to match your ESPHome substitutions:
+      # attention=1.5°, alarm=2.5°
+      - name: "Caravan Front Level State"
+        unique_id: caravan_front_level_state
+        icon: mdi:spirit-level
+        state: >
+          {% set t = states('sensor.caravan_front_tilt_max')|float(none) %}
+          {% if t is none %}
+            UNKNOWN
+          {% elif t >= 2.5 %}
+            ALARM
+          {% elif t >= 1.5 %}
+            ATTENTION
+          {% else %}
+            LEVEL
+          {% endif %}
+        attributes:
+          attention_deg: 1.5
+          alarm_deg: 2.5
+          package_version: *pkg_version
+
+  - binary_sensor:
+      - name: "Caravan Front Level Data OK"
+        unique_id: caravan_front_level_data_ok
+        device_class: connectivity
+        state: >
+          {{ states('sensor.caravan_front_tilt_max')|float(none) is not none }}
+        attributes:
+          package_version: *pkg_version
+
+      - name: "Caravan Front Level Attention"
+        unique_id: caravan_front_level_attention
+        icon: mdi:alert-circle
+        state: >
+          {% set t = states('sensor.caravan_front_tilt_max')|float(none) %}
+          {{ t is not none and t >= 1.5 and t < 2.5 }}
+        attributes:
+          package_version: *pkg_version
+
+      - name: "Caravan Front Level Alarm"
+        unique_id: caravan_front_level_alarm
+        icon: mdi:alert-octagram
+        state: >
+          {% set t = states('sensor.caravan_front_tilt_max')|float(none) %}
+          {{ t is not none and t >= 2.5 }}
+        attributes:
+          package_version: *pkg_version
+
+script:
+  caravan_front_level_reset_reference:
+    alias: Caravan Front Level - Reset Reference (FR+FL)
+    mode: single
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.caravan_moving
+                state: "on"
+            sequence:
+              - service: script.caravan_notify
+                data:
+                  title: Caravan
+                  message: "Level calibration blocked: caravan is moving."
+                  severity: attention
+              - stop: "Moving - blocked"
+
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.caravan_level_front_right_fr_device_status
+                state: "off"
+            sequence:
+              - service: script.caravan_notify
+                data:
+                  title: Caravan
+                  message: "Level reset blocked: Front Right level device is offline."
+                  severity: attention
+              - stop: "FR offline"
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.caravan_level_front_left_fl_device_status
+                state: "off"
+            sequence:
+              - service: script.caravan_notify
+                data:
+                  title: Caravan
+                  message: "Level reset blocked: Front Left level device is offline."
+                  severity: attention
+              - stop: "FL offline"
+
+      - service: button.press
+        target:
+          entity_id:
+            - button.caravan_level_front_right_fr_reset_level_reference
+            - button.caravan_level_front_left_fl_reset_level_reference
+
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.caravan_front_level_last_calibration
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+      - service: script.caravan_notify
+        data:
+          title: Caravan
+          message: "Front level reference reset (FR+FL)."
+          severity: info
+
+  caravan_front_level_set_reference:
+    alias: Caravan Front Level - Set Reference (FR+FL)
+    mode: single
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.caravan_moving
+                state: "on"
+            sequence:
+              - service: script.caravan_notify
+                data:
+                  title: Caravan
+                  message: "Level calibration blocked: caravan is moving."
+                  severity: attention
+              - stop: "Moving - blocked"
+
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.caravan_level_front_right_fr_device_status
+                state: "off"
+            sequence:
+              - service: script.caravan_notify
+                data:
+                  title: Caravan
+                  message: "Level set blocked: Front Right level device is offline."
+                  severity: attention
+              - stop: "FR offline"
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.caravan_level_front_left_fl_device_status
+                state: "off"
+            sequence:
+              - service: script.caravan_notify
+                data:
+                  title: Caravan
+                  message: "Level set blocked: Front Left level device is offline."
+                  severity: attention
+              - stop: "FL offline"
+
+      - service: button.press
+        target:
+          entity_id:
+            - button.caravan_level_front_right_fr_set_current_as_level_reference
+            - button.caravan_level_front_left_fl_set_current_as_level_reference
+
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.caravan_front_level_last_calibration
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+      - service: script.caravan_notify
+        data:
+          title: Caravan
+          message: "Front level reference set (FR+FL)."
+          severity: info
+
+  caravan_front_level_calibration_wizard:
+    alias: Caravan Front Level - Calibration Wizard (Reset + Set)
+    mode: single
+    sequence:
+      - service: script.caravan_notify
+        data:
+          title: Caravan
+          message: "Calibration wizard: resetting reference…"
+          severity: info
+      - service: script.caravan_front_level_reset_reference
+      - delay: "00:00:02"
+      - service: script.caravan_notify
+        data:
+          title: Caravan
+          message: "Calibration wizard: setting reference…"
+          severity: info
+      - service: script.caravan_front_level_set_reference

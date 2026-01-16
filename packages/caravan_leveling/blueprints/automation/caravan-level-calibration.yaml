@@ -1,0 +1,95 @@
+blueprint:
+  name: Caravan Leveling - Notify on Attention/Alarm
+  description: >
+    Sends a notification when the combined front level state becomes ATTENTION or ALARM.
+    Suppresses notifications while caravan is moving.
+  domain: automation
+  input:
+    level_state_sensor:
+      name: Front Level State Sensor
+      selector:
+        entity:
+          domain: sensor
+    moving_sensor:
+      name: Caravan Moving Sensor
+      selector:
+        entity:
+          domain: binary_sensor
+    notify_script:
+      name: Notify Script
+      description: Script that accepts fields: title, message, severity (your script.caravan_notify)
+      selector:
+        entity:
+          domain: script
+    title:
+      name: Notification Title
+      default: Caravan
+      selector:
+        text: {}
+    notify_on_attention:
+      name: Notify on ATTENTION
+      default: true
+      selector:
+        boolean: {}
+    notify_on_alarm:
+      name: Notify on ALARM
+      default: true
+      selector:
+        boolean: {}
+    cooldown_minutes:
+      name: Cooldown (minutes)
+      description: Minimum time between notifications for the same severity.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 240
+          step: 1
+          mode: slider
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id: !input level_state_sensor
+
+variables:
+  state_now: "{{ trigger.to_state.state if trigger.to_state else 'unknown' }}"
+  moving: "{{ is_state(!input moving_sensor, 'on') }}"
+  do_attention: !input notify_on_attention
+  do_alarm: !input notify_on_alarm
+  cooldown: !input cooldown_minutes
+
+condition:
+  - condition: template
+    value_template: >
+      {{ not moving and state_now in ['ATTENTION','ALARM'] }}
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ state_now == 'ATTENTION' and do_attention }}"
+        sequence:
+          - service: !input notify_script
+            data:
+              title: !input title
+              severity: attention
+              message: >
+                Front leveling needs attention.
+                LR={{ states('sensor.caravan_front_pitch_avg') }}°,
+                FB={{ states('sensor.caravan_front_roll_avg') }}°,
+                Tilt={{ states('sensor.caravan_front_tilt_max') }}°
+      - conditions:
+          - condition: template
+            value_template: "{{ state_now == 'ALARM' and do_alarm }}"
+        sequence:
+          - service: !input notify_script
+            data:
+              title: !input title
+              severity: alarm
+              message: >
+                Front leveling ALARM.
+                LR={{ states('sensor.caravan_front_pitch_avg') }}°,
+                FB={{ states('sensor.caravan_front_roll_avg') }}°,
+                Tilt={{ states('sensor.caravan_front_tilt_max') }}°

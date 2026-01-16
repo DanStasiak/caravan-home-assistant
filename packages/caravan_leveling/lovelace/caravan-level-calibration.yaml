@@ -1,0 +1,211 @@
+title: Level Calibration
+path: caravan-level-calibration
+icon: mdi:wand
+type: sections
+subview: true
+max_columns: 1
+dense_section_placement: true
+theme: Mushroom
+badges:
+  - type: custom:mushroom-chips-card
+    alignment: center
+    chips:
+      - type: template
+        entity: sensor.caravan_front_level_state
+        icon: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            mdi:alert
+          {% elif s == 'ATTENTION' %}
+            mdi:alert-circle
+          {% elif s == 'LEVEL' %}
+            mdi:check-circle
+          {% else %}
+            mdi:help-circle
+          {% endif %}
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        content: "{{ states('sensor.caravan_front_level_state') }}"
+        tap_action:
+          action: more-info
+          entity: sensor.caravan_front_tilt_max
+      - type: template
+        entity: sensor.caravan_front_pitch_avg
+        icon: mdi:swap-horizontal
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        content: >
+          {% set lr = states('sensor.caravan_front_pitch_avg')|float(none) %} {{
+          'LR %.0f°'|format(lr) if lr is not none else 'LR —' }}
+        tap_action:
+          action: more-info
+          entity: sensor.caravan_front_pitch_avg
+      - type: template
+        entity: sensor.caravan_front_roll_avg
+        icon: mdi:caravan
+        icon_color: >
+          {% set s = states('sensor.caravan_front_level_state') %} {% if s ==
+          'ALARM' %}
+            red
+          {% elif s == 'ATTENTION' %}
+            orange
+          {% elif s == 'LEVEL' %}
+            green
+          {% else %}
+            grey
+          {% endif %}
+        content: >
+          {% set fb = states('sensor.caravan_front_roll_avg')|float(none) %} {{
+          'FB %.0f°'|format(fb) if fb is not none else 'FB —' }}
+        tap_action:
+          action: more-info
+          entity: sensor.caravan_front_roll_avg
+      - type: template
+        icon: mdi:restore
+        icon_color: blue
+        content: Reset
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_reset_reference
+      - type: template
+        icon: mdi:target
+        icon_color: blue
+        content: Set
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_set_reference
+      - type: template
+        icon: mdi:wand
+        icon_color: blue
+        content: Wizard
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_calibration_wizard
+      - type: template
+        icon: mdi:arrow-left
+        icon_color: grey
+        content: Back
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/caravan-level
+sections:
+  - type: grid
+    columns: 1
+    square: false
+    cards:
+      - type: heading
+        heading: Calibration Wizard
+        heading_style: title
+      - type: custom:mushroom-template-card
+        primary: Preconditions
+        secondary: >
+          {% set moving = is_state('binary_sensor.caravan_moving','on') %} {%
+          set fr_ok =
+          is_state('binary_sensor.caravan_level_front_right_fr_device_status','on')
+          %} {% set fl_ok =
+          is_state('binary_sensor.caravan_level_front_left_fl_device_status','on')
+          %} {% if moving %}
+            ❌ Caravan is moving
+          {% else %}
+            ✅ Caravan is not moving
+          {% endif %} {{ "\n" }} {% if fr_ok %}✅ Front Right sensor online{%
+          else %}❌ Front Right sensor offline{% endif %} {{ "\n" }} {% if fl_ok
+          %}✅ Front Left sensor online{% else %}❌ Front Left sensor offline{%
+          endif %}
+        icon: mdi:clipboard-check
+        icon_color: >
+          {% set moving = is_state('binary_sensor.caravan_moving','on') %} {%
+          set fr_ok =
+          is_state('binary_sensor.caravan_level_front_right_fr_device_status','on')
+          %} {% set fl_ok =
+          is_state('binary_sensor.caravan_level_front_left_fl_device_status','on')
+          %} {% if (not moving) and fr_ok and fl_ok %}
+            green
+          {% else %}
+            orange
+          {% endif %}
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+      - type: custom:mushroom-template-card
+        primary: Last calibrated
+        secondary: >
+          {% set v =
+          states('input_datetime.caravan_front_level_last_calibration') %} {% if
+          v in ['unknown','unavailable','none',''] %}
+            —
+          {% else %}
+            {{ v }}
+          {% endif %}
+        icon: mdi:clock-check
+        icon_color: blue
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:mushroom-template-card
+        primary: Reset reference
+        secondary: Sets offsets back to 0 (FR+FL)
+        icon: mdi:restore
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_reset_reference
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+      - type: custom:mushroom-template-card
+        primary: Set reference
+        secondary: Uses current position as “level” (FR+FL)
+        icon: mdi:target
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_set_reference
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+      - type: custom:mushroom-template-card
+        primary: One-tap wizard
+        secondary: Reset → wait 2s → Set (FR+FL)
+        icon: mdi:wand
+        icon_color: green
+        tap_action:
+          action: call-service
+          service: script.caravan_front_level_calibration_wizard
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+      - type: custom:mushroom-template-card
+        primary: Back to Level
+        secondary: Return to main Level view
+        icon: mdi:arrow-left
+        icon_color: grey
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/caravan-level
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; padding: 16px; }
+cards: []
