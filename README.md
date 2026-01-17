@@ -1,4 +1,8 @@
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://buymeacoffee.com/dstasiak)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-YAML--first-blue?logo=home-assistant)](https://www.home-assistant.io/)
+[![ESPHome](https://img.shields.io/badge/ESPHome-supported-green?logo=esphome)](https://esphome.io/)
+[![YAML](https://img.shields.io/badge/Config-YAML--only-informational)](https://yaml.org/)
+
 
 # 🚐 Caravan Home Assistant
 ### Smart Mobile Trailer platform powered by Home Assistant  
@@ -227,7 +231,6 @@ The **Hobby Excellent 540 FU** is the reference, not a limitation.
 ---
 
 ## 🚧 Project status
-> 💡 **Support**: If you find this project useful and want to support continued development, consider buying me a coffee: https://buymeacoffee.com/dstasiak
 
 
 - Leveling: **Production**
@@ -270,4 +273,51 @@ https://buymeacoffee.com/dstasiak
 Your support helps fund hardware, sensors, test setups, and ongoing development — and is very much appreciated.
 
 Thank you!
+---
+
+## 🌍 Community & Support
+
+This project is developed, tested, and maintained in real-world use, entirely in my spare time.
+
+If this repository helps you build, learn, or improve your own **Caravan / Travel Trailer Home Assistant setup**,  
+I would greatly appreciate your support by buying me a coffee.
+
+👉 **Buy me a coffee:**  
+https://buymeacoffee.com/dstasiak
+
+Support helps fund hardware, sensors, test setups, documentation, and ongoing development.
+
+Community contributions are welcome via:
+- Issues for questions or discussion
+- Pull requests for improvements and extensions
+- Documentation enhancements for broader caravan compatibility
+---
+
+## 📦 Future HACS‑eligible packages
+
+While this repository is currently a **full reference implementation**, parts of it are intentionally structured
+to allow extraction into **standalone, HACS‑installable packages** in the future.
+
+Planned candidates include:
+- 📐 Caravan Leveling (travel‑trailer safe)
+- 🔔 Notification & alert framework
+- 📶 Connectivity & uplink monitoring
+- 🌡️ Climate / zone aggregation templates
+
+These packages will be grouped under:
+
+```
+packages_hacs/
+```
+Each package will include:
+- Independent README
+- Clear prerequisites
+- Auto‑discovery notes
+- Versioning & changelog
+- HACS‑compatible structure and metadata
+
+This approach allows:
+- Clean reuse outside this repository
+- Easier community adoption
+- Optional installation without the full system
 
