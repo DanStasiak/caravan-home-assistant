@@ -1,3 +1,5 @@
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://buymeacoffee.com/dstasiak)
+
 # 🚐 Caravan Home Assistant
 ### Smart Mobile Trailer platform powered by Home Assistant  
 **Reference implementation: Hobby Excellent 540 FU (2019)**
@@ -225,6 +227,8 @@ The **Hobby Excellent 540 FU** is the reference, not a limitation.
 ---
 
 ## 🚧 Project status
+> 💡 **Support**: If you find this project useful and want to support continued development, consider buying me a coffee: https://buymeacoffee.com/dstasiak
+
 
 - Leveling: **Production**
 - Other subsystems: **Active development**
@@ -246,6 +250,24 @@ Provided **as‑is**, without warranty.
 ---
 
 ## 🤝 Contributing
+This repository is structured with **clarity, documentation, and reuse** in mind, to allow future community use and potential HACS-style distribution of individual packages.
+
 
 Issues, discussions, and pull requests are welcome —  
 especially improvements that make the system easier to adapt to other travel trailers.
+---
+
+## ☕ Support the project
+
+This project is developed, tested, and maintained in real-world use, entirely in my spare time.
+
+If this repository helps you build, learn, or improve your own **Caravan / Travel Trailer Home Assistant setup**,  
+I would greatly appreciate your support by buying me a coffee.
+
+👉 **Buy me a coffee:**  
+https://buymeacoffee.com/dstasiak
+
+Your support helps fund hardware, sensors, test setups, and ongoing development — and is very much appreciated.
+
+Thank you!
+
