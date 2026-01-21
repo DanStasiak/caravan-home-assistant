@@ -16,7 +16,7 @@ This folder contains the **Lovelace start page** for the **Caravan (Mobile)** da
 The start page is the primary **mobile-first** dashboard when traveling. It is optimized for:
 - phones
 - large, high-contrast UI elements
-- quick recognition for older users
+- quick recognition
 
 Typical tiles include: Water, Battery, Temperature, Connectivity (Starlink/LTE), GPS, Heating, Security, and Leveling.
 
