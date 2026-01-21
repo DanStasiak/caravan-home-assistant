@@ -1,3 +1,8 @@
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://buymeacoffee.com/dstasiak)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-YAML--first-blue?logo=home-assistant)](https://www.home-assistant.io/)
+[![ESPHome](https://img.shields.io/badge/ESPHome-supported-green?logo=esphome)](https://esphome.io/)
+[![YAML](https://img.shields.io/badge/Config-YAML--only-informational)](https://yaml.org/)
+
 # Caravan Mobile – Start Page (Dashboard Module)
 
 This folder contains the **Lovelace start page** for the **Caravan (Mobile)** dashboard, published in a way that is safe to share:
