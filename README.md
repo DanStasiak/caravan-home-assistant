@@ -160,12 +160,26 @@ Custom enclosures for ESP & sensors:
 
 ---
 
-## 📸 Screenshots
+## Mobile Start Page (Caravan – Mobile)
 
-Screenshots will be added once the main dashboards are finalized:
-- Caravan Mobile overview
-- Leveling calibration
-- Power & climate views
+The **Caravan (Mobile)** start page is the primary operational dashboard when traveling.
+It is designed to be **mobile-first**, **high-contrast**, and **easy to read**, especially on phones.
+
+![Caravan Mobile Start Page](docs/images/mobile-dashboard-home.jpg)
+
+### What this page shows at a glance
+
+- **Fresh Water** – current tank level with trend indication
+- **Battery** – state of charge with early warning visibility
+- **Temperature** – current interior temperature
+- **Connectivity** – active WAN (e.g. Starlink / LTE)
+- **GPS** – positioning status
+- **Heating** – Truma / heating integration (experimental / lab)
+- **Security** – doors, windows, alarm state
+- **Level** – caravan leveling status with quick access to calibration
+
+Each tile links to a **dedicated sub-page** for deeper diagnostics and control.
+
 
 ---
 
