@@ -127,7 +127,7 @@ Central notification framework:
 
 ### 📊 Dashboards & UX — *ongoing*
 Mobile‑first dashboards:
-- Caravan overview
+- <a href="dashboards/caravan_mobile">Caravan overview</a>
 - Power
 - Climate
 - Connectivity
