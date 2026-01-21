@@ -57,4 +57,4 @@ Also supported: **Dark** or **Auto** (Home Assistant appearance settings).
 ## Files
 
 - `start-page.view.yaml` – the sanitised Lovelace view YAML
-- `ENTITY_MAP.md` – entity mapping and notes
+- `ENTITY_MAP.md` – entity mapping and notes 
