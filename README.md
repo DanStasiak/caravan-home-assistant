@@ -165,7 +165,10 @@ Custom enclosures for ESP & sensors:
 The **Caravan (Mobile)** start page is the primary operational dashboard when traveling.
 It is designed to be **mobile-first**, **high-contrast**, and **easy to read**, especially on phones.
 
-![Caravan Mobile Start Page](docs/images/mobile-dashboard-home.jpg)
+<a href="docs/images/mobile-dashboard-home.jpg">
+  <img src="docs/images/mobile-dashboard-home.jpg" width="25%" alt="Caravan Mobile Start Page" />
+</a>
+
 
 ### What this page shows at a glance
 
