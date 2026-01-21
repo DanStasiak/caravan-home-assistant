@@ -166,9 +166,8 @@ The **Caravan (Mobile)** start page is the primary operational dashboard when tr
 It is designed to be **mobile-first**, **high-contrast**, and **easy to read**, especially on phones.
 
 <a href="docs/images/mobile-dashboard-home.jpg">
-  <img src="docs/images/mobile-dashboard-home.jpg" width="25%" alt="Caravan Mobile Start Page" />
+  <img src="docs/images/mobile-dashboard-home.jpg" width="240" alt="Caravan Mobile Start Page" />
 </a>
-
 
 ### What this page shows at a glance
 
