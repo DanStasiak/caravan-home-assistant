@@ -1,0 +1,1483 @@
+# Caravan Mobile – Start Page (PUBLIC / SANITISED)
+#
+# This file is intended for publication. It should not contain:
+# - personal device names (phones, people, hostnames)
+# - coordinates / locations
+# - credentials / tokens / URLs containing secrets
+#
+# Theme: Mushroom Square
+# Recommended appearance: Light (Dark/Auto also supported)
+#
+# Required frontend (HACS):
+# - Mushroom (cards)
+# - card-mod
+#
+# Optional (only if used by this view):
+# - mini-graph-card
+# - vertical-stack-in-card
+# - bar-card
+#
+
+title: Caravan (Mobile)
+path: caravan-mobile
+icon: mdi:cellphone
+type: sections
+max_columns: 1
+dense_section_placement: true
+theme: Mushroom Square
+badges: []
+sections:
+  - type: grid
+    cards:
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        card_mod:
+          style: |
+            ha-card { padding: 10px 10px; }
+
+            mushroom-chip {
+              --chip-background: #EAF2FF;
+              --chip-border-radius: 10px;
+              padding: 6px 10px !important;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+            }
+
+            mushroom-chip span {
+              font-size: 16px !important;
+              font-weight: 700;
+              color: #1F2937;
+              line-height: 1.1;
+              display: inline-flex;
+              align-items: center;
+            }
+
+            mushroom-chip ha-icon,
+            mushroom-chip mushroom-shape-icon,
+            mushroom-chip .shape {
+              border-radius: 10px !important;
+            }
+        chips:
+          - type: template
+            icon: >
+              {% set q = states('sensor.connectivity_quality') %} {% if q ==
+              'Good' %} mdi:check-network {% elif q == 'Fair' %}
+              mdi:network-strength-2 {% elif q == 'Poor' %}
+              mdi:network-strength-1 {% else %} mdi:network-off {% endif %}
+            content: >
+              {% set q = states('sensor.connectivity_quality') %} {{ 'Net: —' if
+              q in ['unknown','unavailable','none',''] else 'Net: ' ~ q }}
+            icon_color: >
+              {% set q = states('sensor.connectivity_quality') %} {% if q ==
+              'Good' %} #2F80ED {% elif q == 'Fair' %} orange {% elif q ==
+              'Poor' %} red {% elif q == 'Offline' %} red {% else %} grey {%
+              endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.connectivity_quality
+          - type: template
+            icon: >
+              {% set a = states('sensor.caravan_uplink_router')|lower %} {% if a
+              == 'starlink' %} mdi:satellite-uplink {% elif a == 'cellular' %}
+              mdi:signal-cellular-3 {% elif a == 'offline' %} mdi:network-off {%
+              else %} mdi:help-network {% endif %}
+            content: >
+              {% set a = states('sensor.caravan_uplink_router') %} {{ '—' if a
+              in ['unknown','unavailable','none',''] else a }}
+            icon_color: >
+              {% set a = states('sensor.caravan_uplink_router')|lower %} {% if a
+              == 'starlink' %} #2F80ED {% elif a == 'cellular' %} orange {% elif
+              a == 'offline' %} red {% else %} grey {% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace/caravan-uplink-usage
+            hold_action:
+              action: navigate
+              navigation_path: /lovelace/caravan-connectivity-history
+          - type: template
+            icon: mdi:thermometer
+            content: >
+              {% set t =
+              states('sensor.caravan_temperature_average')|float(none) %} {{
+              '—°C' if t is none else (t|round(0)) ~ '°C' }}
+            icon_color: >
+              {% set t =
+              states('sensor.caravan_temperature_average')|float(none) %} {% if
+              t is none %} grey {% elif t <= 10 %} blue {% elif t >= 28 %} red
+              {% else %} #2F80ED {% endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.caravan_temperature_average
+          - type: template
+            icon: >
+              {% if is_state('binary_sensor.caravan_alarm','on') %} mdi:alert {%
+              elif is_state('binary_sensor.caravan_attention','on') %}
+              mdi:alert-circle {% else %} mdi:check-circle {% endif %}
+            content: >
+              {% if is_state('binary_sensor.caravan_alarm','on') %} ALARM {%
+              elif is_state('binary_sensor.caravan_attention','on') %} ATT {%
+              else %} OK {% endif %}
+            icon_color: >
+              {% if is_state('binary_sensor.caravan_alarm','on') %} red {% elif
+              is_state('binary_sensor.caravan_attention','on') %} orange {% else
+              %} #2F80ED {% endif %}
+            tap_action:
+              action: more-info
+              entity: binary_sensor.caravan_alarm
+            hold_action:
+              action: more-info
+              entity: binary_sensor.caravan_attention
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:vertical-stack-in-card
+            card_mod:
+              style: >
+                ha-card { height: 118px !important; position: relative
+                !important; }
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Fresh Water
+                secondary: >
+                  {% set v = states('input_number.water_tank_level')|float(none)
+                  %} {{ '—' if v is none else (v|round(0)) ~ ' %' }}
+                icon: mdi:waves
+                tap_action:
+                  action: more-info
+                  entity: input_number.water_tank_level
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set v = states('input_number.water_tank_level')|float(none) %}
+                        {% set val = (v if v is not none else 0) %}
+
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {% if v is none %}
+                          {% set rgb='150,150,150' %}
+                          {% set anim='ac-cold-breathe' %}
+                          {% set glow_anim='ac-cool-glow' %}
+                          {% set halo_anim='ac-cool-halo' %}
+                          {% set duration=4.6 %}
+                          {% set intensity=0.25 %}
+                        {% elif val <= 15 %}
+                          {% set rgb='255,40,40' %}
+                          {% set anim='ac-hot-shimmer' %}
+                          {% set glow_anim='ac-hot-glow' %}
+                          {% set halo_anim='ac-hot-halo' %}
+                          {% set duration=2.0 %}
+                          {% set intensity=1.0 %}
+                        {% elif val <= 30 %}
+                          {% set rgb='255,150,40' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.6 %}
+                          {% set intensity=0.8 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        opacity: 1;
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+
+                      .shape::before,
+
+                      .shape::after {
+                        content: '';
+                        position: absolute;
+                        border-radius: inherit;
+                        pointer-events: none;
+                      }
+
+                      .shape::before { inset: -5px; animation:
+                      var(--ac-glow-animation); }
+
+                      .shape::after  { inset: -12px; animation:
+                      var(--ac-halo-animation); mix-blend-mode: screen; }
+
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      }
+
+
+                      @keyframes ac-cold-glow {
+                        0%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px 6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));}
+                        50%{box-shadow:0 0 22px 3px rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px 10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));}
+                        100%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px 6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));}
+                      }
+
+                      @keyframes ac-cold-halo {
+                        0%{box-shadow:0 0 45px 14px rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));}
+                        50%{box-shadow:0 0 70px 22px rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));}
+                        100%{box-shadow:0 0 45px 14px rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));}
+                      }
+
+
+                      @keyframes ac-cool-glow {
+                        0%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px 4px rgba(var(--ac-rgb), calc(0.20 * var(--ac-i)));}
+                        50%{box-shadow:0 0 18px 2px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i))), 0 0 28px 7px rgba(var(--ac-rgb), calc(0.25 * var(--ac-i)));}
+                        100%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px 4px rgba(var(--ac-rgb), calc(0.20 * var(--ac-i)));}
+                      }
+
+                      @keyframes ac-cool-halo {
+                        0%{box-shadow:0 0 36px 12px rgba(var(--ac-rgb), calc(0.12 * var(--ac-i)));}
+                        50%{box-shadow:0 0 55px 18px rgba(var(--ac-rgb), calc(0.16 * var(--ac-i)));}
+                        100%{box-shadow:0 0 36px 12px rgba(var(--ac-rgb), calc(0.12 * var(--ac-i)));}
+                      }
+
+
+                      @keyframes ac-warm-pulse {
+                      0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}
+                      }
+
+                      @keyframes ac-warm-glow { 50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-halo { 50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));} }
+
+
+                      @keyframes ac-hot-shimmer {
+                      0%{transform:scale(1);filter:blur(0);}50%{transform:scale(1.08);filter:blur(0.6px);}100%{transform:scale(1);filter:blur(0);}
+                      }
+
+                      @keyframes ac-hot-glow { 50%{box-shadow:0 0 24px 4px
+                      rgba(var(--ac-rgb), calc(0.95 * var(--ac-i))), 0 0 40px
+                      12px rgba(var(--ac-rgb), calc(0.65 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-halo { 50%{box-shadow:0 0 80px 26px
+                      rgba(var(--ac-rgb), calc(0.36 * var(--ac-i)));} }
+                    .: >
+                      mushroom-shape-icon { background: transparent !important;
+                      }
+
+
+                      mushroom-card-content {
+                        padding: 14px 14px !important;
+                        height: 118px !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: center !important;
+                      }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon {
+                        --icon-size: 64px;
+                        --icon-color: rgba(var(--ac-rgb),1) !important;
+                        display: flex;
+                        margin: -18px 0 10px -20px !important;
+                        padding-right: 22px;
+                        padding-bottom: 25px;
+                      }
+              - type: custom:vertical-stack-in-card
+                cards:
+                  - type: custom:mini-graph-card
+                    entities:
+                      - input_number.water_tank_level
+                    hours_to_show: 24
+                    line_width: 5
+                    show:
+                      name: false
+                      icon: false
+                      state: false
+                      labels: false
+                      legend: false
+                    fill: fade
+                    card_mod:
+                      style: |
+                        ha-card {
+                          background: none !important;
+                          box-shadow: none !important;
+                          opacity: 50%;
+                          border: none !important;
+                          width: 250px;
+                          mask-image: radial-gradient(
+                            ellipse at center,
+                            rgba(0,0,0,1) 0%,
+                            rgba(0,0,0,0) 90%
+                          );
+                        }
+                card_mod:
+                  style:
+                    .: |
+                      ha-card {
+                        background: none !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        margin: 8px 12px !important;
+                        position: absolute !important;
+                        bottom: -10px !important;
+                        right: -10px !important;
+                        pointer-events: none;
+                      }
+          - type: custom:vertical-stack-in-card
+            card_mod:
+              style: >
+                ha-card { height: 118px !important; position: relative
+                !important; }
+
+                {% set soc =
+                states('input_number.caravan_battery_soc')|float(none) %}
+
+                {% if soc is not none and soc <= 20 %}
+
+                @keyframes pulseWarnBatt {
+                  0% { box-shadow: 0 0 0 0 rgba(255,165,0,0.55); }
+                  70% { box-shadow: 0 0 0 18px rgba(255,165,0,0.00); }
+                  100% { box-shadow: 0 0 0 0 rgba(255,165,0,0.00); }
+                }
+
+                ha-card { animation: pulseWarnBatt 1.6s ease-out infinite; }
+
+                {% endif %}
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Battery
+                secondary: >
+                  {% set soc =
+                  states('input_number.caravan_battery_soc')|float(none) %} {{
+                  '—' if soc is none else (soc|round(0)) ~ ' %' }}
+                icon: mdi:battery
+                tap_action:
+                  action: more-info
+                  entity: input_number.caravan_battery_soc
+                hold_action:
+                  action: more-info
+                  entity: sensor.caravan_power_summary
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set soc = states('input_number.caravan_battery_soc')|float(none) %}
+                        {% set val = (soc if soc is not none else 0) %}
+
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {% if soc is none %}
+                          {% set rgb='150,150,150' %}
+                          {% set anim='ac-cold-breathe' %}
+                          {% set glow_anim='ac-cool-glow' %}
+                          {% set halo_anim='ac-cool-halo' %}
+                          {% set duration=4.6 %}
+                          {% set intensity=0.25 %}
+                        {% elif val <= 15 %}
+                          {% set rgb='255,40,40' %}
+                          {% set anim='ac-hot-shimmer' %}
+                          {% set glow_anim='ac-hot-glow' %}
+                          {% set halo_anim='ac-hot-halo' %}
+                          {% set duration=2.0 %}
+                          {% set intensity=1.0 %}
+                        {% elif val <= 35 %}
+                          {% set rgb='255,150,40' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.6 %}
+                          {% set intensity=0.8 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        opacity: 1;
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+
+                      .shape::before,
+
+                      .shape::after { content:''; position:absolute;
+                      border-radius:inherit; pointer-events:none; }
+
+                      .shape::before { inset:-5px;  animation:
+                      var(--ac-glow-animation); }
+
+                      .shape::after  { inset:-12px; animation:
+                      var(--ac-halo-animation); mix-blend-mode: screen; }
+
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      }
+
+                      @keyframes ac-cold-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 *
+                      var(--ac-i)));}50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));} }
+
+                      @keyframes ac-cold-halo { 0%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 *
+                      var(--ac-i)));}50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 *
+                      var(--ac-i)));}100%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));} }
+
+                      @keyframes ac-cool-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px
+                      4px rgba(var(--ac-rgb), calc(0.20 *
+                      var(--ac-i)));}50%{box-shadow:0 0 18px 2px
+                      rgba(var(--ac-rgb), calc(0.35 * var(--ac-i))), 0 0 28px
+                      7px rgba(var(--ac-rgb), calc(0.25 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px
+                      4px rgba(var(--ac-rgb), calc(0.20 * var(--ac-i)));} }
+
+                      @keyframes ac-cool-halo { 0%{box-shadow:0 0 36px 12px
+                      rgba(var(--ac-rgb), calc(0.12 *
+                      var(--ac-i)));}50%{box-shadow:0 0 55px 18px
+                      rgba(var(--ac-rgb), calc(0.16 *
+                      var(--ac-i)));}100%{box-shadow:0 0 36px 12px
+                      rgba(var(--ac-rgb), calc(0.12 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-pulse {
+                      0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}
+                      }
+
+                      @keyframes ac-warm-glow { 50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-halo { 50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-shimmer {
+                      0%{transform:scale(1);filter:blur(0);}50%{transform:scale(1.08);filter:blur(0.6px);}100%{transform:scale(1);filter:blur(0);}
+                      }
+
+                      @keyframes ac-hot-glow { 50%{box-shadow:0 0 24px 4px
+                      rgba(var(--ac-rgb), calc(0.95 * var(--ac-i))), 0 0 40px
+                      12px rgba(var(--ac-rgb), calc(0.65 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-halo { 50%{box-shadow:0 0 80px 26px
+                      rgba(var(--ac-rgb), calc(0.36 * var(--ac-i)));} }
+                    .: >
+                      mushroom-shape-icon { background: transparent !important;
+                      }
+
+                      mushroom-card-content { padding: 14px 14px !important;
+                      height: 118px !important; display: flex !important;
+                      flex-direction: column !important; justify-content: center
+                      !important; }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon { --icon-size: 64px; --icon-color:
+                      rgba(var(--ac-rgb),1) !important; display: flex; margin:
+                      -18px 0 10px -20px !important; padding-right: 22px;
+                      padding-bottom: 25px; }
+              - type: custom:vertical-stack-in-card
+                cards:
+                  - type: custom:mini-graph-card
+                    entities:
+                      - input_number.caravan_battery_soc
+                    hours_to_show: 24
+                    line_width: 5
+                    show:
+                      name: false
+                      icon: false
+                      state: false
+                      labels: false
+                      legend: false
+                    fill: fade
+                    card_mod:
+                      style: |
+                        ha-card {
+                          background: none !important;
+                          box-shadow: none !important;
+                          opacity: 50%;
+                          border: none !important;
+                          width: 250px;
+                          mask-image: radial-gradient(
+                            ellipse at center,
+                            rgba(0,0,0,1) 0%,
+                            rgba(0,0,0,0) 90%
+                          );
+                        }
+                card_mod:
+                  style:
+                    .: |
+                      ha-card {
+                        background: none !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        margin: 8px 12px !important;
+                        position: absolute !important;
+                        bottom: -10px !important;
+                        right: -10px !important;
+                        pointer-events: none;
+                      }
+          - type: custom:vertical-stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Temperature
+                secondary: >
+                  {% set t =
+                  states('sensor.caravan_temperature_average')|float(none) %} {{
+                  '—' if t is none else (t|round(0)) ~ '°C' }}
+                icon: mdi:thermometer
+                tap_action:
+                  action: navigate
+                  navigation_path: /lovelace/caravan-environment
+                hold_action:
+                  action: more-info
+                  entity: sensor.caravan_temperature_average
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set t = states('sensor.caravan_temperature_average')|float(none) %}
+                        {% set val = (t if t is not none else 0) %}
+
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {% if t is none %}
+                          {% set rgb='150,150,150' %}
+                          {% set anim='ac-cold-breathe' %}
+                          {% set glow_anim='ac-cool-glow' %}
+                          {% set halo_anim='ac-cool-halo' %}
+                          {% set duration=4.6 %}
+                          {% set intensity=0.25 %}
+                        {% elif val <= 10 %}
+                          {% set rgb='0,140,255' %}
+                          {% set anim='ac-cold-breathe' %}
+                          {% set glow_anim='ac-cold-glow' %}
+                          {% set halo_anim='ac-cold-halo' %}
+                          {% set duration=4.4 %}
+                          {% set intensity=0.5 %}
+                        {% elif val >= 28 %}
+                          {% set rgb='255,40,40' %}
+                          {% set anim='ac-hot-shimmer' %}
+                          {% set glow_anim='ac-hot-glow' %}
+                          {% set halo_anim='ac-hot-halo' %}
+                          {% set duration=2.2 %}
+                          {% set intensity=0.9 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+
+                      .shape::before,.shape::after { content:'';
+                      position:absolute; border-radius:inherit;
+                      pointer-events:none; }
+
+                      .shape::before { inset:-5px;  animation:
+                      var(--ac-glow-animation); }
+
+                      .shape::after  { inset:-12px; animation:
+                      var(--ac-halo-animation); mix-blend-mode: screen; }
+
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      }
+
+                      @keyframes ac-cold-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 *
+                      var(--ac-i)));}50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));} }
+
+                      @keyframes ac-cold-halo { 0%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 *
+                      var(--ac-i)));}50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 *
+                      var(--ac-i)));}100%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));} }
+
+                      @keyframes ac-cool-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px
+                      4px rgba(var(--ac-rgb), calc(0.20 *
+                      var(--ac-i)));}50%{box-shadow:0 0 18px 2px
+                      rgba(var(--ac-rgb), calc(0.35 * var(--ac-i))), 0 0 28px
+                      7px rgba(var(--ac-rgb), calc(0.25 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px
+                      4px rgba(var(--ac-rgb), calc(0.20 * var(--ac-i)));} }
+
+                      @keyframes ac-cool-halo { 0%{box-shadow:0 0 36px 12px
+                      rgba(var(--ac-rgb), calc(0.12 *
+                      var(--ac-i)));}50%{box-shadow:0 0 55px 18px
+                      rgba(var(--ac-rgb), calc(0.16 *
+                      var(--ac-i)));}100%{box-shadow:0 0 36px 12px
+                      rgba(var(--ac-rgb), calc(0.12 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-shimmer {
+                      0%{transform:scale(1);filter:blur(0);}50%{transform:scale(1.08);filter:blur(0.6px);}100%{transform:scale(1);filter:blur(0);}
+                      }
+
+                      @keyframes ac-hot-glow { 50%{box-shadow:0 0 24px 4px
+                      rgba(var(--ac-rgb), calc(0.95 * var(--ac-i))), 0 0 40px
+                      12px rgba(var(--ac-rgb), calc(0.65 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-halo { 50%{box-shadow:0 0 80px 26px
+                      rgba(var(--ac-rgb), calc(0.36 * var(--ac-i)));} }
+                    .: >
+                      mushroom-shape-icon { background: transparent !important;
+                      }
+
+                      mushroom-card-content { padding: 14px 14px !important;
+                      height: 118px !important; display: flex !important;
+                      flex-direction: column !important; justify-content: center
+                      !important; }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon { --icon-size: 64px; --icon-color:
+                      rgba(var(--ac-rgb),1) !important; display: flex; margin:
+                      -18px 0 10px -20px !important; padding-right: 22px;
+                      padding-bottom: 25px; }
+              - type: custom:vertical-stack-in-card
+                cards:
+                  - type: custom:mini-graph-card
+                    entities:
+                      - sensor.caravan_temperature_average
+                    hours_to_show: 24
+                    points_per_hour: 1
+                    line_width: 5
+                    show:
+                      name: false
+                      icon: false
+                      state: false
+                      labels: false
+                      legend: false
+                    fill: fade
+                    card_mod:
+                      style: |
+                        ha-card {
+                          background: none !important;
+                          box-shadow: none !important;
+                          opacity: 50%;
+                          border: none !important;
+                          width: 250px;
+                          mask-image: radial-gradient(
+                            ellipse at center,
+                            rgba(0,0,0,1) 0%,
+                            rgba(0,0,0,0) 90%
+                          );
+                        }
+                card_mod:
+                  style:
+                    .: |
+                      ha-card {
+                        background: none !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        margin: 8px 12px !important;
+                        position: absolute !important;
+                        bottom: -10px !important;
+                        right: -10px !important;
+                        pointer-events: none;
+                      }
+            card_mod:
+              style: |
+                ha-card { height: 118px !important; position: relative; }
+          - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card { height: 118px !important; }
+                {% if is_state('binary_sensor.failover_active','on') %}
+                @keyframes pulseBlue {
+                  0% { box-shadow: 0 0 0 0 rgba(47,128,237,0.45); }
+                  70% { box-shadow: 0 0 0 18px rgba(47,128,237,0.00); }
+                  100% { box-shadow: 0 0 0 0 rgba(47,128,237,0.00); }
+                }
+                ha-card { animation: pulseBlue 1.8s ease-out infinite; }
+                {% endif %}
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Connectivity
+                secondary: >
+                  {% set a = states('sensor.caravan_uplink_router')|lower %} {%
+                  set ok = is_state('binary_sensor.internet_ok','on') %} {% if
+                  not ok %} Offline {% elif a == 'starlink' %} Starlink {% elif
+                  a == 'cellular' %} LTE Backup {% else %} {{
+                  states('sensor.caravan_uplink_router') }} {% endif %}
+                icon: mdi:wan
+                tap_action:
+                  action: navigate
+                  navigation_path: /lovelace/caravan-uplink-usage
+                hold_action:
+                  action: navigate
+                  navigation_path: /lovelace/caravan-connectivity-history
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set ok = is_state('binary_sensor.internet_ok','on') %}
+                        {% set uplink = states('sensor.caravan_uplink_router')|lower %}
+
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {% if not ok %}
+                          {% set rgb='255,40,40' %}
+                          {% set anim='ac-hot-shimmer' %}
+                          {% set glow_anim='ac-hot-glow' %}
+                          {% set halo_anim='ac-hot-halo' %}
+                          {% set duration=2.0 %}
+                          {% set intensity=1.0 %}
+                        {% elif uplink == 'cellular' %}
+                          {% set rgb='255,150,40' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.6 %}
+                          {% set intensity=0.85 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+
+                      .shape::before,.shape::after { content:'';
+                      position:absolute; border-radius:inherit;
+                      pointer-events:none; }
+
+                      .shape::before { inset:-5px;  animation:
+                      var(--ac-glow-animation); }
+
+                      .shape::after  { inset:-12px; animation:
+                      var(--ac-halo-animation); mix-blend-mode: screen; }
+
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      }
+
+                      @keyframes ac-cold-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 *
+                      var(--ac-i)));}50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));} }
+
+                      @keyframes ac-cold-halo { 0%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 *
+                      var(--ac-i)));}50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 *
+                      var(--ac-i)));}100%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-pulse {
+                      0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}
+                      }
+
+                      @keyframes ac-warm-glow { 50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-halo { 50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-shimmer {
+                      0%{transform:scale(1);filter:blur(0);}50%{transform:scale(1.08);filter:blur(0.6px);}100%{transform:scale(1);filter:blur(0);}
+                      }
+
+                      @keyframes ac-hot-glow { 50%{box-shadow:0 0 24px 4px
+                      rgba(var(--ac-rgb), calc(0.95 * var(--ac-i))), 0 0 40px
+                      12px rgba(var(--ac-rgb), calc(0.65 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-halo { 50%{box-shadow:0 0 80px 26px
+                      rgba(var(--ac-rgb), calc(0.36 * var(--ac-i)));} }
+                    .: >
+                      mushroom-shape-icon { background: transparent !important;
+                      }
+
+                      mushroom-card-content { padding: 14px 14px !important;
+                      height: 118px !important; display: flex !important;
+                      flex-direction: column !important; justify-content: center
+                      !important; }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon { --icon-size: 64px; --icon-color:
+                      rgba(var(--ac-rgb),1) !important; display: flex; margin:
+                      -18px 0 10px -20px !important; padding-right: 22px;
+                      padding-bottom: 25px; }
+          - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card { height: 118px !important; }
+            cards:
+              - type: custom:mushroom-template-card
+                primary: GPS
+                secondary: |
+                  {% if is_state('binary_sensor.caravan_gps_fix_ok','on') %}
+                    {% if is_state('binary_sensor.caravan_gps_stale','on') %} Stale
+                    {% elif is_state('binary_sensor.caravan_moving','on') %} Moving
+                    {% else %} OK
+                    {% endif %}
+                  {% else %}
+                    No fix
+                  {% endif %}
+                icon: |
+                  {% if is_state('binary_sensor.caravan_gps_fix_ok','on') %}
+                    {% if is_state('binary_sensor.caravan_gps_stale','on') %} mdi:clock-alert-outline
+                    {% elif is_state('binary_sensor.caravan_moving','on') %} mdi:caravan
+                    {% else %} mdi:crosshairs-gps
+                    {% endif %}
+                  {% else %}
+                    mdi:crosshairs-off
+                  {% endif %}
+                tap_action:
+                  action: navigate
+                  navigation_path: /lovelace/caravan-location
+                hold_action:
+                  action: more-info
+                  entity: sensor.caravan_gps_mode
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set fix = is_state('binary_sensor.caravan_gps_fix_ok','on') %}
+                        {% set stale = is_state('binary_sensor.caravan_gps_stale','on') %}
+
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {% if not fix %}
+                          {% set rgb='255,40,40' %}
+                          {% set anim='ac-hot-shimmer' %}
+                          {% set glow_anim='ac-hot-glow' %}
+                          {% set halo_anim='ac-hot-halo' %}
+                          {% set duration=2.0 %}
+                          {% set intensity=1.0 %}
+                        {% elif stale %}
+                          {% set rgb='255,150,40' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.6 %}
+                          {% set intensity=0.85 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+
+                      .shape::before,.shape::after { content:'';
+                      position:absolute; border-radius:inherit;
+                      pointer-events:none; }
+
+                      .shape::before { inset:-5px;  animation:
+                      var(--ac-glow-animation); }
+
+                      .shape::after  { inset:-12px; animation:
+                      var(--ac-halo-animation); mix-blend-mode: screen; }
+
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      }
+
+                      @keyframes ac-cold-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 *
+                      var(--ac-i)));}50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));} }
+
+                      @keyframes ac-cold-halo { 0%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 *
+                      var(--ac-i)));}50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 *
+                      var(--ac-i)));}100%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-pulse {
+                      0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}
+                      }
+
+                      @keyframes ac-warm-glow { 50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-halo { 50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-shimmer {
+                      0%{transform:scale(1);filter:blur(0);}50%{transform:scale(1.08);filter:blur(0.6px);}100%{transform:scale(1);filter:blur(0);}
+                      }
+
+                      @keyframes ac-hot-glow { 50%{box-shadow:0 0 24px 4px
+                      rgba(var(--ac-rgb), calc(0.95 * var(--ac-i))), 0 0 40px
+                      12px rgba(var(--ac-rgb), calc(0.65 * var(--ac-i)));} }
+
+                      @keyframes ac-hot-halo { 50%{box-shadow:0 0 80px 26px
+                      rgba(var(--ac-rgb), calc(0.36 * var(--ac-i)));} }
+                    .: >
+                      mushroom-shape-icon { background: transparent !important;
+                      }
+
+                      mushroom-card-content { padding: 14px 14px !important;
+                      height: 118px !important; display: flex !important;
+                      flex-direction: column !important; justify-content: center
+                      !important; }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon { --icon-size: 64px; --icon-color:
+                      rgba(var(--ac-rgb),1) !important; display: flex; margin:
+                      -18px 0 10px -20px !important; padding-right: 22px;
+                      padding-bottom: 25px; }
+          - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card { height: 118px !important; }
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Heating
+                secondary: >
+                  {% if is_state('input_boolean.caravan_heater_installed','off')
+                  %}
+                    Lab
+                  {% elif
+                  is_state('input_boolean.caravan_heater_connected','off') %}
+                    Offline
+                  {% else %}
+                    {{ states('input_select.caravan_heater_mode') }}
+                  {% endif %}
+                icon: mdi:radiator
+                tap_action:
+                  action: more-info
+                  entity: sensor.caravan_heater_summary
+                hold_action:
+                  action: more-info
+                  entity: binary_sensor.caravan_heater_stale
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set installed = is_state('input_boolean.caravan_heater_installed','on') %}
+                        {% set connected = is_state('input_boolean.caravan_heater_connected','on') %}
+
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {% if not installed %}
+                          {% set rgb='150,150,150' %}
+                          {% set anim='ac-cold-breathe' %}
+                          {% set glow_anim='ac-cool-glow' %}
+                          {% set halo_anim='ac-cool-halo' %}
+                          {% set duration=4.6 %}
+                          {% set intensity=0.25 %}
+                        {% elif not connected %}
+                          {% set rgb='255,150,40' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.8 %}
+                          {% set intensity=0.85 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+
+                      .shape::before,.shape::after { content:'';
+                      position:absolute; border-radius:inherit;
+                      pointer-events:none; }
+
+                      .shape::before { inset:-5px;  animation:
+                      var(--ac-glow-animation); }
+
+                      .shape::after  { inset:-12px; animation:
+                      var(--ac-halo-animation); mix-blend-mode: screen; }
+
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      }
+
+                      @keyframes ac-cold-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 *
+                      var(--ac-i)));}50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px
+                      6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));} }
+
+                      @keyframes ac-cold-halo { 0%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 *
+                      var(--ac-i)));}50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 *
+                      var(--ac-i)));}100%{box-shadow:0 0 45px 14px
+                      rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));} }
+
+                      @keyframes ac-cool-glow { 0%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px
+                      4px rgba(var(--ac-rgb), calc(0.20 *
+                      var(--ac-i)));}50%{box-shadow:0 0 18px 2px
+                      rgba(var(--ac-rgb), calc(0.35 * var(--ac-i))), 0 0 28px
+                      7px rgba(var(--ac-rgb), calc(0.25 *
+                      var(--ac-i)));}100%{box-shadow:0 0 14px 0
+                      rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px
+                      4px rgba(var(--ac-rgb), calc(0.20 * var(--ac-i)));} }
+
+                      @keyframes ac-cool-halo { 0%{box-shadow:0 0 36px 12px
+                      rgba(var(--ac-rgb), calc(0.12 *
+                      var(--ac-i)));}50%{box-shadow:0 0 55px 18px
+                      rgba(var(--ac-rgb), calc(0.16 *
+                      var(--ac-i)));}100%{box-shadow:0 0 36px 12px
+                      rgba(var(--ac-rgb), calc(0.12 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-pulse {
+                      0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}
+                      }
+
+                      @keyframes ac-warm-glow { 50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));} }
+
+                      @keyframes ac-warm-halo { 50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));} }
+                    .: >
+                      mushroom-shape-icon { background: transparent !important;
+                      }
+
+                      mushroom-card-content { padding: 14px 14px !important;
+                      height: 118px !important; display: flex !important;
+                      flex-direction: column !important; justify-content: center
+                      !important; }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon { --icon-size: 64px; --icon-color:
+                      rgba(var(--ac-rgb),1) !important; display: flex; margin:
+                      -18px 0 10px -20px !important; padding-right: 22px;
+                      padding-bottom: 25px; }
+          - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card { height: 118px !important; }
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Security
+                secondary: >
+                  {% if is_state('binary_sensor.caravan_alarm','on') %} ALARM {%
+                  elif is_state('binary_sensor.caravan_attention','on') %}
+                  Attention {% else %} OK {% endif %}
+                icon: mdi:shield-home
+                tap_action:
+                  action: navigate
+                  navigation_path: /lovelace/caravan-security
+                hold_action:
+                  action: more-info
+                  entity: binary_sensor.caravan_alarm
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set alarm = is_state('binary_sensor.caravan_alarm','on') %}
+                        {% set attn  = is_state('binary_sensor.caravan_attention','on') %}
+
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {% if alarm %}
+                          {% set rgb='255,40,40' %}
+                          {% set anim='ac-hot-shimmer' %}
+                          {% set glow_anim='ac-hot-glow' %}
+                          {% set halo_anim='ac-hot-halo' %}
+                          {% set duration=2.0 %}
+                          {% set intensity=1.0 %}
+                        {% elif attn %}
+                          {% set rgb='255,150,40' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.6 %}
+                          {% set intensity=0.85 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+                      .shape::before,.shape::after { content:'';
+                      position:absolute; border-radius:inherit;
+                      pointer-events:none; } .shape::before { inset:-5px; 
+                      animation: var(--ac-glow-animation); } .shape::after  {
+                      inset:-12px; animation: var(--ac-halo-animation);
+                      mix-blend-mode: screen; }
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      } @keyframes ac-warm-pulse  {
+                      0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}
+                      } @keyframes ac-hot-shimmer {
+                      0%{transform:scale(1);filter:blur(0);}50%{transform:scale(1.08);filter:blur(0.6px);}100%{transform:scale(1);filter:blur(0);}
+                      }
+
+                      @keyframes ac-cold-glow {
+                        0%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px 6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));}
+                        50%{box-shadow:0 0 22px 3px rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px 10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));}
+                        100%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px 6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));}
+                      } @keyframes ac-cold-halo {
+                        0%{box-shadow:0 0 45px 14px rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));}
+                        50%{box-shadow:0 0 70px 22px rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));}
+                        100%{box-shadow:0 0 45px 14px rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));}
+                      } @keyframes ac-warm-glow { 50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));} }
+                      @keyframes ac-warm-halo { 50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));} }
+                      @keyframes ac-hot-glow  { 50%{box-shadow:0 0 24px 4px
+                      rgba(var(--ac-rgb), calc(0.95 * var(--ac-i))), 0 0 40px
+                      12px rgba(var(--ac-rgb), calc(0.65 * var(--ac-i)));} }
+                      @keyframes ac-hot-halo  { 50%{box-shadow:0 0 80px 26px
+                      rgba(var(--ac-rgb), calc(0.36 * var(--ac-i)));} }
+                    .: >
+                      mushroom-card-content { padding: 14px 14px !important;
+                      height: 118px !important; display: flex !important;
+                      flex-direction: column !important; justify-content: center
+                      !important; }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon { --icon-size: 64px; --icon-color:
+                      rgba(var(--ac-rgb),1) !important; display: flex; margin:
+                      -18px 0 10px -20px !important; padding-right: 22px;
+                      padding-bottom: 25px; }
+          - type: custom:vertical-stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Level
+                secondary: >
+                  {% set s = states('sensor.caravan_front_level_state') %} {%
+                  set t = states('sensor.caravan_front_tilt_max')|float(none) %}
+                  {% if s == 'LEVEL' %}
+                    Level ✅
+                  {% elif s == 'ATTENTION' %}
+                    Slight tilt{% if t is not none %} ({{ '%.0f'|format(t) }}°){% endif %}
+                  {% elif s == 'ALARM' %}
+                    Not level{% if t is not none %} ({{ '%.0f'|format(t) }}°){% endif %}
+                  {% else %}
+                    Open
+                  {% endif %}
+                icon: mdi:spirit-level
+                icon_color: "#2F80ED"
+                tap_action:
+                  action: navigate
+                  navigation_path: /lovelace/caravan-level
+                hold_action:
+                  action: more-info
+                  entity: sensor.caravan_level_roll
+                card_mod:
+                  style:
+                    mushroom-shape-icon$: >
+                      .shape {
+                        {% set roll = states('sensor.caravan_level_roll')|float(none) %}
+                        {% set pitch = states('sensor.caravan_level_pitch')|float(none) %}
+                        {% set state = states('sensor.caravan_front_level_state') %}
+                        {% set have_axes = (roll is not none and pitch is not none) %}
+                        {% set tilt = (roll|abs) + (pitch|abs) if have_axes else 0 %}
+
+                        {# --- DEFAULT: BLUE --- #}
+                        {% set rgb='0,140,255' %}
+                        {% set anim='ac-cold-breathe' %}
+                        {% set glow_anim='ac-cold-glow' %}
+                        {% set halo_anim='ac-cold-halo' %}
+                        {% set duration=4.2 %}
+                        {% set intensity=0.45 %}
+
+                        {# --- ORANGE: ATTENTION or geometric tilt --- #}
+                        {% if state == 'ATTENTION' or tilt >= 2.0 %}
+                          {% set rgb='255,150,40' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.8 %}
+                          {% set intensity=0.85 %}
+                        {% endif %}
+
+                        {# --- RED: ALARM always wins --- #}
+                        {% if state == 'ALARM' %}
+                          {% set rgb='255,60,60' %}
+                          {% set anim='ac-warm-pulse' %}
+                          {% set glow_anim='ac-warm-glow' %}
+                          {% set halo_anim='ac-warm-halo' %}
+                          {% set duration=2.2 %}
+                          {% set intensity=1.0 %}
+                        {% endif %}
+
+                        --ac-rgb: {{ rgb }};
+                        --ac-i: {{ intensity }};
+                        --shape-animation: {{ anim }} {{ duration }}s ease-in-out infinite;
+                        --ac-glow-animation: {{ glow_anim }} {{ (duration * 0.9) | round(2) }}s ease-in-out infinite;
+                        --ac-halo-animation: {{ halo_anim }} {{ (duration * 1.15) | round(2) }}s ease-in-out infinite;
+
+                        --icon-color: rgba({{ rgb }}, 1);
+
+                        background-color: rgba(77, 77, 77, 0.10) !important;
+                        border: 1px solid rgba(255,255,255,0.06);
+                        border-radius: 14px !important;
+
+                        position: relative;
+                        transform-origin: 50% 60%;
+                        animation: var(--shape-animation);
+                      }
+
+                      .shape::before,.shape::after { content:'';
+                      position:absolute; border-radius:inherit;
+                      pointer-events:none; } .shape::before { inset:-5px; 
+                      animation: var(--ac-glow-animation); } .shape::after  {
+                      inset:-12px; animation: var(--ac-halo-animation);
+                      mix-blend-mode: screen; }
+
+                      @keyframes ac-cold-breathe {
+                      0%{transform:scale(0.96);}50%{transform:scale(1.03);}100%{transform:scale(0.96);}
+                      } @keyframes ac-warm-pulse  {
+                      0%{transform:scale(1);}50%{transform:scale(1.07);}100%{transform:scale(1);}
+                      }
+
+                      @keyframes ac-cold-glow {
+                        0%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px 6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));}
+                        50%{box-shadow:0 0 22px 3px rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px 10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));}
+                        100%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.55 * var(--ac-i))), 0 0 26px 6px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i)));}
+                      } @keyframes ac-cold-halo {
+                        0%{box-shadow:0 0 45px 14px rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));}
+                        50%{box-shadow:0 0 70px 22px rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));}
+                        100%{box-shadow:0 0 45px 14px rgba(var(--ac-rgb), calc(0.22 * var(--ac-i)));}
+                      } @keyframes ac-cool-glow {
+                        0%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px 4px rgba(var(--ac-rgb), calc(0.20 * var(--ac-i)));}
+                        50%{box-shadow:0 0 18px 2px rgba(var(--ac-rgb), calc(0.35 * var(--ac-i))), 0 0 28px 7px rgba(var(--ac-rgb), calc(0.25 * var(--ac-i)));}
+                        100%{box-shadow:0 0 14px 0 rgba(var(--ac-rgb), calc(0.28 * var(--ac-i))), 0 0 22px 4px rgba(var(--ac-rgb), calc(0.20 * var(--ac-i)));}
+                      } @keyframes ac-cool-halo {
+                        0%{box-shadow:0 0 36px 12px rgba(var(--ac-rgb), calc(0.12 * var(--ac-i)));}
+                        50%{box-shadow:0 0 55px 18px rgba(var(--ac-rgb), calc(0.16 * var(--ac-i)));}
+                        100%{box-shadow:0 0 36px 12px rgba(var(--ac-rgb), calc(0.12 * var(--ac-i)));}
+                      } @keyframes ac-warm-glow { 50%{box-shadow:0 0 22px 3px
+                      rgba(var(--ac-rgb), calc(0.85 * var(--ac-i))), 0 0 36px
+                      10px rgba(var(--ac-rgb), calc(0.55 * var(--ac-i)));} }
+                      @keyframes ac-warm-halo { 50%{box-shadow:0 0 70px 22px
+                      rgba(var(--ac-rgb), calc(0.32 * var(--ac-i)));} }
+                    .: >
+                      mushroom-card-content { padding: 14px 14px !important;
+                      height: 118px !important; display: flex !important;
+                      flex-direction: column !important; justify-content: center
+                      !important; }
+
+                      .primary { font-size: 18px !important; font-weight: 700
+                      !important; color: #1F2937 !important; }
+
+                      .secondary { font-size: 22px !important; font-weight: 800
+                      !important; color: #1F2937 !important; }
+
+                      mushroom-shape-icon { --icon-size: 64px; --icon-color:
+                      rgba(var(--ac-rgb),1) !important; display: flex; margin:
+                      -18px 0 10px -20px !important; padding-right: 22px;
+                      padding-bottom: 25px; }
+            card_mod:
+              style: |
+                ha-card { height: 118px !important; }
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: action
+            icon: mdi:server
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace/caravan-host
+        card_mod:
+          style: |
+            ha-card { padding: 6px 6px; }
+
+            mushroom-chip {
+              --chip-background: #EAF2FF;
+              --chip-border-radius: 10px;
+              width: 56px;
+              height: 56px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0 !important;
+            }
+
+            mushroom-chip mushroom-shape-icon,
+            mushroom-chip .shape,
+            mushroom-chip ha-icon {
+              border-radius: 10px !important;
+            }
+
+            mushroom-chip ha-icon { --mdc-icon-size: 26px; }
+cards: []
