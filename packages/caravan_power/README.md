@@ -1,214 +1,188 @@
-# ⚡ Caravan Power
+# Travel Trailer Power (Victron) – Home Assistant Package **Repository:** `caravan-home-assistant` **Package:** `caravan_power` **Version:** `v1.0.0` **Scope:** **Travel trailers / caravans with Victron BLE devices (SmartShunt + IP22) and optional BMS** **Project root:** https://github.com/DanStasiak/caravan-home-assistant
 
-![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Compatible-blue)
-![Package](https://img.shields.io/badge/Type-HA%20Package-green)
-![Status](https://img.shields.io/badge/Status-Stable-brightgreen)
+This package provides a **canonical battery abstraction layer** (**Voltage / Current / Power / SoC / TTG**), **power source intelligence** (**Mains / Alternator / Battery**), **BLE freshness protection**, and **alerting** for real-world caravan deployments.
 
-
-
-> Mobile Assistant – Power Subsystem  
-> Structured Victron-based battery monitoring for caravans
+> ⚠️ This is a **monitoring + alerting system**  
+> ❌ No actuator control  
+> ❌ No inverter / 230V load management (yet)  
+> ✅ Designed for low DB churn (“Reduce Sensor Logging DB” pattern)
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-Screenshots are stored in:
+### Power (subview)
+![Power view](./screenshots/power.png)
 
-```
-packages/caravan_power/screenshots/
-```
-
-| Overview | Charging | Battery | Mains |
-|----------|----------|----------|--------|
-| ![](screenshots/power-overview.png) | ![](screenshots/power-charging.png) | ![](screenshots/power-battery.png) | ![](screenshots/power-mains.png) |
+### Charging
+![Charging view](./screenshots/power-charging.png)
 
 ---
 
-# 🎯 Overview
+## Architecture (Power Package)
 
-The **Caravan Power** package provides a production-ready power intelligence layer for the Mobile Assistant platform.
-
-It unifies battery metrics, charging detection and power source logic into a clean, reusable Home Assistant package.
-
----
-
-# 🧠 Architecture
-
-## Signal Priority Model
-
-SmartShunt → Primary source  
-BMS → Secondary fallback  
-IP22 → Used only if data fresh  
-
-Freshness entities required:
-
-- `binary_sensor.smartshunt_data_fresh`
-- `binary_sensor.victron_ip22_data_fresh`
-
----
-
-## Logical Flow
-
-Victron SmartShunt (BLE)  
-Victron IP22 Charger (BLE)  
-JBD / Humsienk BMS (BLE)  
-ESP32 (ESPHome)  
-Home Assistant  
-Caravan Power Package  
-Dashboard + Notifications  
-
----
-
-# 🔌 Hardware Used
-
-| Component | Purpose |
-|------------|----------|
-| Victron SmartShunt | Authoritative battery measurement |
-| Victron IP22 Charger | Shore charging |
-| JBD / Humsienk BMS | Internal LiFePO4 telemetry |
-| ESP32 (ESPHome) | BLE bridge + freshness tracking |
-| Zigbee Plug | Shore power detection |
-| Home Assistant | Automation + UI layer |
-
-Optional:
-- Victron Orion DC‑DC (alternator charging)
-
----
-
-# 🔧 Wiring Concept
-
-Diagrams should be placed in:
-
-```
-packages/caravan_power/docs/
+```text
+┌───────────────────────────┐
+│ Victron SmartShunt (BLE)   │
+└───────────────┬───────────┘
+                │
+┌───────────────▼───────────┐
+│ Victron IP22 Charger (BLE) │
+└───────────────┬───────────┘
+                │
+┌───────────────▼───────────┐
+│ JBD / Humsienk BMS (BLE)   │
+└───────────────┬───────────┘
+                │  WiFi
+┌───────────────▼──────────────┐
+│ ESP32 (ESPHome)               │
+│ - victron_ble + freshness     │
+│ - bms + optional env sensors  │
+└───────────────┬──────────────┘
+                │  native API
+┌───────────────▼──────────────┐
+│ Home Assistant                │
+│ - Trigger-based templates     │
+│ - Statistics (15m delta)      │
+│ - Alerts + UI status layer    │
+│ - Lovelace UI (Power view)    │
+└──────────────────────────────┘
 ```
 
-Conceptual layout:
-
-230V Shore → IP22 → Battery  
-Battery → SmartShunt → DC Bus → Loads  
-
-SmartShunt must be installed on the negative battery line.  
-ESP32 must be within stable BLE range.
+**Data flow**
+1. BLE devices broadcast measurements
+2. ESPHome publishes sensors + freshness
+3. HA templates produce canonical signals with deterministic fallback
+4. UI + alerts use only canonical entities
 
 ---
 
-# 📁 Folder Structure
+## Wiring Diagram (SVG)
 
-```
-packages/
-  caravan_power/
-    caravan_power.yaml
-    README.md
-    SECURITY.md
-    secrets.example.yaml
-    lovelace/
-    esphome/
-    screenshots/
-    docs/
-```
+![Wiring diagram](./docs/wiring.svg)
 
 ---
 
-# ⚙ Installation
+## Hardware Used
 
-1. Copy folder into:
+### Power Node (BLE bridge)
+- **MCU:** **ESP32 Dev Module**
+- **BLE devices:** **Victron SmartShunt**, **Victron IP22**
+- **Optional BMS:** **JBD / Humsienk** (BLE)
+- **Optional env sensors:** **SHT3x**, **SCD4x** (I²C shared bus)
 
-```
-config/packages/caravan_power/
+### Mains detection
+- **Smart plug / metering plug:** your device (example entity: `switch.plugz01`)
+  - Used to derive `binary_sensor.caravan_mains_present`
+
+---
+
+## ✅ Home Assistant Prerequisites
+- Home Assistant **2024.10+**
+- ESPHome **2024.12+**
+- YAML configuration enabled
+
+---
+
+## Frontend Plugins (UI only)
+
+Install via **HACS → Frontend**:
+- **Mushroom Cards** https://github.com/piitaya/lovelace-mushroom
+- **button-card** https://github.com/custom-cards/button-card
+- **card-mod** https://github.com/thomasloven/lovelace-card-mod
+- **ApexCharts Card** (optional, for trends) https://github.com/RomRider/apexcharts-card
+
+Restart Home Assistant after installation.
+
+---
+
+## Installation (Home Assistant YAML Package)
+
+This package is **not installed via HACS**. It is a **YAML package** placed inside your HA config.
+
+### Steps
+1. Copy this folder:
+```text
+packages/caravan_power/
 ```
 
 2. Ensure packages are enabled:
-
 ```yaml
 homeassistant:
   packages: !include_dir_named packages
 ```
 
-3. Restart Home Assistant.
+3. Restart Home Assistant
 
 ---
 
-# 📊 Exposed Entities
+## ESPHome Auto‑Discovery & Stable Entity IDs
 
-## Canonical Battery
+### Recommended (best)
+Use the provided ESPHome file:
+- `esphome/caravan-env-1.github.yaml` (GitHub-safe placeholders)
 
-- `sensor.caravan_battery_voltage`
-- `sensor.caravan_battery_current`
-- `sensor.caravan_battery_power`
-- `sensor.caravan_battery_soc`
-- `sensor.caravan_time_to_go`
+Then set your real values using `secrets.yaml` (see `secrets.example.yaml`).
 
-## Power Intelligence
+### Existing devices
+Rename your ESPHome node to:
+- `caravan-env-1`
 
-- `sensor.caravan_power_source`
-- `binary_sensor.caravan_mains_present`
-- `binary_sensor.caravan_battery_charging_now`
-- `binary_sensor.caravan_alternator_charging`
-- `binary_sensor.caravan_battery_draining_fast`
-
-## Health
-
-- `sensor.caravan_power_heartbeat`
-- `binary_sensor.caravan_power_package_healthy`
+Then restart Home Assistant to stabilize entity names.
 
 ---
 
-# 🚨 Alerts
+## Lovelace UI Import
+- `lovelace/caravan-power.yaml`
 
-### Critical Battery
-
-Triggered when:
-
-- SoC = Critical  
-- Not charging  
-- No mains present  
-
-### Draining Fast
-
-Triggered when:
-
-- 15‑minute voltage delta ≤ -0.20V  
-- No active charge source  
+Mobile-first, large touch targets, Mushroom Square compatible.
 
 ---
 
-# 📉 Database Optimization
+## Notifications (Blueprint)
 
-Implements the **Reduce Sensor Logging DB** strategy:
+Blueprint:
+- `blueprints/automation/caravan_power_notify.yaml`
 
-- Trigger-based templates  
-- Statistics integration (15m delta)  
-- ESPHome delta filtering  
-- Single BLE heartbeat per device  
-
-Result: minimal database churn with high UI responsiveness.
-
----
-
-# 🔐 Security
-
-This package contains **no secrets**.
-
-See:
-
-- `SECURITY.md`
-- `secrets.example.yaml`
-
-Never commit:
-
-- WiFi credentials  
-- MAC addresses  
-- Bindkeys  
-- API encryption keys  
-- OTA passwords  
+Features:
+- Alerts on **Critical** and **Draining Fast**
+- Cooldown logic
+- Optional recovery notification
+- Uses your existing `script.caravan_notify` (or replace with your notifier)
 
 ---
 
-# 📦 Version
+## ⚠️ Common Mistakes & Troubleshooting
 
-**v1.0.0**  
-Released: 2026-02-19
+### ❌ IP22 shows “Charging” when mains is off
+➡️ Caused by stale BLE readings  
+✔️ Ensure `binary_sensor.victron_ip22_data_fresh` is working and used for gating
 
-Initial standalone Power package extraction from the Mobile Assistant project.
+### ❌ Voltage/Power stop updating
+➡️ BLE contention / ESP32 connection limits  
+✔️ Ensure `esp32_ble.max_connections` covers proxy + devices (5 recommended)
+
+### ❌ “Mains present” never turns on
+➡️ Plug entity mismatch  
+✔️ Update `switch.plugz01` + its power/current sensors in `caravan_power.yaml`
+
+### ❌ Too much database growth
+➡️ Sensors updating at advert-rate  
+✔️ Keep TTG trigger-based (1/min) and ensure ESPHome delta filters are enabled
+
+---
+
+## Scope (By Design)
+- Monitoring + alerting only
+- No automatic load shedding
+- No inverter control logic
+
+This keeps the system **safe, predictable, and portable**.
+
+---
+
+## Versioning
+- **v1.0.0**
+  - Initial Power package extraction
+  - Canonical sensors + freshness gating
+  - Alerts + Lovelace subview

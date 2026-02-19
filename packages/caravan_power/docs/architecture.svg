@@ -1,28 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600">
 <style>
-.box { fill:#f8fafc; stroke:#334155; stroke-width:2; rx:12; }
+.box { fill:#f8fafc; stroke:#1e293b; stroke-width:2; rx:14; }
 .title { font-size:26px; font-family:Arial; font-weight:bold; }
 .label { font-size:16px; font-family:Arial; }
+.small { font-size:14px; font-family:Arial; fill:#475569; }
 </style>
-<text x="500" y="40" text-anchor="middle" class="title">Caravan Power Architecture</text>
-
-<rect x="100" y="150" width="250" height="80" class="box"/>
-<text x="225" y="195" text-anchor="middle" class="label">Victron SmartShunt (BLE)</text>
-
-<rect x="100" y="270" width="250" height="80" class="box"/>
-<text x="225" y="315" text-anchor="middle" class="label">Victron IP22 Charger (BLE)</text>
-
-<rect x="100" y="390" width="250" height="80" class="box"/>
-<text x="225" y="435" text-anchor="middle" class="label">JBD / Humsienk BMS (BLE)</text>
-
-<rect x="450" y="260" width="280" height="120" class="box"/>
-<text x="590" y="325" text-anchor="middle" class="label">ESP32 (ESPHome)</text>
-
-<rect x="820" y="260" width="150" height="120" class="box"/>
-<text x="895" y="325" text-anchor="middle" class="label">Home Assistant</text>
-
-<line x1="350" y1="190" x2="450" y2="320" stroke="#334155" stroke-width="2"/>
-<line x1="350" y1="310" x2="450" y2="320" stroke="#334155" stroke-width="2"/>
-<line x1="350" y1="430" x2="450" y2="320" stroke="#334155" stroke-width="2"/>
-<line x1="730" y1="320" x2="820" y2="320" stroke="#334155" stroke-width="2"/>
+<text x="500" y="45" text-anchor="middle" class="title">Caravan Power Architecture</text>
+<rect x="90" y="140" width="260" height="80" class="box"/>
+<text x="220" y="185" text-anchor="middle" class="label">Victron SmartShunt (BLE)</text>
+<text x="220" y="205" text-anchor="middle" class="small">Primary / authoritative</text>
+<rect x="90" y="250" width="260" height="80" class="box"/>
+<text x="220" y="295" text-anchor="middle" class="label">JBD / Humsienk BMS (BLE)</text>
+<text x="220" y="315" text-anchor="middle" class="small">Secondary fallback</text>
+<rect x="90" y="360" width="260" height="80" class="box"/>
+<text x="220" y="405" text-anchor="middle" class="label">Victron IP22 (BLE)</text>
+<text x="220" y="425" text-anchor="middle" class="small">Use only if fresh</text>
+<rect x="420" y="255" width="300" height="140" class="box"/>
+<text x="570" y="325" text-anchor="middle" class="label">ESP32 (ESPHome)</text>
+<text x="570" y="350" text-anchor="middle" class="small">Sensors + freshness + BLE stability</text>
+<rect x="780" y="255" width="180" height="140" class="box"/>
+<text x="870" y="325" text-anchor="middle" class="label">Home Assistant</text>
+<text x="870" y="350" text-anchor="middle" class="small">Canonical templates + alerts + UI</text>
+<line x1="350" y1="180" x2="420" y2="325" stroke="#1e293b" stroke-width="2"/>
+<line x1="350" y1="290" x2="420" y2="325" stroke="#1e293b" stroke-width="2"/>
+<line x1="350" y1="400" x2="420" y2="325" stroke="#1e293b" stroke-width="2"/>
+<line x1="720" y1="325" x2="780" y2="325" stroke="#1e293b" stroke-width="2"/>
 </svg>

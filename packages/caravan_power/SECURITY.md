@@ -1,1 +1,1 @@
-See security guidelines.
+# SECURITY.md

@@ -1,0 +1,76 @@
+blueprint:
+  name: Caravan Power - Notify (Critical / Draining Fast)
+  description: >
+    Sends notifications when battery becomes Critical or when voltage is draining fast.
+    Designed for Mobile Assistant. Uses canonical entities from caravan_power package.
+  domain: automation
+  input:
+    notify_script:
+      name: Notification script/service
+      description: >
+        Default uses script.caravan_notify. Replace with your own notifier if needed.
+      default: script.caravan_notify
+      selector:
+        entity:
+          domain: script
+    title:
+      name: Title
+      default: Caravan Power
+      selector:
+        text: {}
+    cooldown_minutes:
+      name: Cooldown (minutes)
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 240
+          step: 5
+          mode: slider
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: sensor.caravan_battery_status
+    to: Critical
+    for: "00:02:00"
+    id: critical
+  - platform: state
+    entity_id: binary_sensor.caravan_battery_draining_fast
+    to: "on"
+    for: "00:05:00"
+    id: draining
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.caravan_mains_present
+    state: "off"
+  - condition: state
+    entity_id: binary_sensor.caravan_charging_detected
+    state: "off"
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: critical
+        sequence:
+          - service: !input notify_script
+            data:
+              title: !input title
+              message: >
+                {% set v = states('sensor.caravan_battery_voltage')|float(none) %}
+                Battery CRITICAL{% if v is not none and v > 0 %} ({{ '%.2f'|format(v) }} V){% endif %}.
+              severity: alarm
+      - conditions:
+          - condition: trigger
+            id: draining
+        sequence:
+          - service: !input notify_script
+            data:
+              title: !input title
+              message: >
+                Battery draining fast. 15m change: {{ states('sensor.caravan_batt_v_15m_change') }} V.
+              severity: attention
