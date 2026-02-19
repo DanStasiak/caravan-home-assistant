@@ -1,24 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500">
-<rect width="100%" height="100%" fill="white"/>
-<text x="450" y="40" font-size="24" text-anchor="middle">Caravan Power Architecture</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600">
+<style>
+.box { fill:#f8fafc; stroke:#334155; stroke-width:2; rx:12; }
+.title { font-size:26px; font-family:Arial; font-weight:bold; }
+.label { font-size:16px; font-family:Arial; }
+</style>
+<text x="500" y="40" text-anchor="middle" class="title">Caravan Power Architecture</text>
 
-<rect x="100" y="100" width="200" height="60" fill="#e3f2fd"/>
-<text x="200" y="135" text-anchor="middle">SmartShunt (BLE)</text>
+<rect x="100" y="150" width="250" height="80" class="box"/>
+<text x="225" y="195" text-anchor="middle" class="label">Victron SmartShunt (BLE)</text>
 
-<rect x="100" y="200" width="200" height="60" fill="#e8f5e9"/>
-<text x="200" y="235" text-anchor="middle">IP22 Charger (BLE)</text>
+<rect x="100" y="270" width="250" height="80" class="box"/>
+<text x="225" y="315" text-anchor="middle" class="label">Victron IP22 Charger (BLE)</text>
 
-<rect x="100" y="300" width="200" height="60" fill="#fff3e0"/>
-<text x="200" y="335" text-anchor="middle">JBD BMS (BLE)</text>
+<rect x="100" y="390" width="250" height="80" class="box"/>
+<text x="225" y="435" text-anchor="middle" class="label">JBD / Humsienk BMS (BLE)</text>
 
-<rect x="400" y="200" width="220" height="80" fill="#f3e5f5"/>
-<text x="510" y="245" text-anchor="middle">ESP32 (ESPHome)</text>
+<rect x="450" y="260" width="280" height="120" class="box"/>
+<text x="590" y="325" text-anchor="middle" class="label">ESP32 (ESPHome)</text>
 
-<rect x="700" y="200" width="160" height="80" fill="#ede7f6"/>
-<text x="780" y="245" text-anchor="middle">Home Assistant</text>
+<rect x="820" y="260" width="150" height="120" class="box"/>
+<text x="895" y="325" text-anchor="middle" class="label">Home Assistant</text>
 
-<line x1="300" y1="130" x2="400" y2="240" stroke="black"/>
-<line x1="300" y1="230" x2="400" y2="240" stroke="black"/>
-<line x1="300" y1="330" x2="400" y2="240" stroke="black"/>
-<line x1="620" y1="240" x2="700" y2="240" stroke="black"/>
+<line x1="350" y1="190" x2="450" y2="320" stroke="#334155" stroke-width="2"/>
+<line x1="350" y1="310" x2="450" y2="320" stroke="#334155" stroke-width="2"/>
+<line x1="350" y1="430" x2="450" y2="320" stroke="#334155" stroke-width="2"/>
+<line x1="730" y1="320" x2="820" y2="320" stroke="#334155" stroke-width="2"/>
 </svg>

@@ -1,20 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400">
-<rect width="100%" height="100%" fill="white"/>
-<text x="450" y="40" font-size="24" text-anchor="middle">Caravan Power Wiring Concept</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500">
+<style>
+.box { fill:#ffffff; stroke:#1e293b; stroke-width:2; rx:12; }
+.title { font-size:24px; font-family:Arial; font-weight:bold; }
+.label { font-size:16px; font-family:Arial; }
+</style>
+<text x="500" y="40" text-anchor="middle" class="title">Caravan Power Wiring Concept</text>
 
-<rect x="100" y="120" width="200" height="60" fill="#e8f5e9"/>
-<text x="200" y="155" text-anchor="middle">230V Shore Power</text>
+<rect x="100" y="200" width="200" height="80" class="box"/>
+<text x="200" y="245" text-anchor="middle" class="label">230V Shore Power</text>
 
-<rect x="350" y="120" width="200" height="60" fill="#e3f2fd"/>
-<text x="450" y="155" text-anchor="middle">IP22 Charger</text>
+<rect x="350" y="200" width="200" height="80" class="box"/>
+<text x="450" y="245" text-anchor="middle" class="label">Victron IP22</text>
 
-<rect x="600" y="120" width="200" height="60" fill="#fff3e0"/>
-<text x="700" y="155" text-anchor="middle">Battery</text>
+<rect x="650" y="200" width="200" height="80" class="box"/>
+<text x="750" y="245" text-anchor="middle" class="label">Battery</text>
 
-<rect x="600" y="250" width="200" height="60" fill="#f3e5f5"/>
-<text x="700" y="285" text-anchor="middle">SmartShunt</text>
+<rect x="650" y="350" width="200" height="80" class="box"/>
+<text x="750" y="395" text-anchor="middle" class="label">SmartShunt (Neg)</text>
 
-<line x1="300" y1="150" x2="350" y2="150" stroke="black"/>
-<line x1="550" y1="150" x2="600" y2="150" stroke="black"/>
-<line x1="700" y1="180" x2="700" y2="250" stroke="black"/>
+<line x1="300" y1="240" x2="350" y2="240" stroke="#1e293b" stroke-width="2"/>
+<line x1="550" y1="240" x2="650" y2="240" stroke="#1e293b" stroke-width="2"/>
+<line x1="750" y1="280" x2="750" y2="350" stroke="#1e293b" stroke-width="2"/>
 </svg>
