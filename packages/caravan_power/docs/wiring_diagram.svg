@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400">
+<rect width="100%" height="100%" fill="white"/>
+<text x="450" y="40" font-size="24" text-anchor="middle">Caravan Power Wiring Concept</text>
+
+<rect x="100" y="120" width="200" height="60" fill="#e8f5e9"/>
+<text x="200" y="155" text-anchor="middle">230V Shore Power</text>
+
+<rect x="350" y="120" width="200" height="60" fill="#e3f2fd"/>
+<text x="450" y="155" text-anchor="middle">IP22 Charger</text>
+
+<rect x="600" y="120" width="200" height="60" fill="#fff3e0"/>
+<text x="700" y="155" text-anchor="middle">Battery</text>
+
+<rect x="600" y="250" width="200" height="60" fill="#f3e5f5"/>
+<text x="700" y="285" text-anchor="middle">SmartShunt</text>
+
+<line x1="300" y1="150" x2="350" y2="150" stroke="black"/>
+<line x1="550" y1="150" x2="600" y2="150" stroke="black"/>
+<line x1="700" y1="180" x2="700" y2="250" stroke="black"/>
+</svg>

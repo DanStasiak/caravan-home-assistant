@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500">
+<rect width="100%" height="100%" fill="white"/>
+<text x="450" y="40" font-size="24" text-anchor="middle">Caravan Power Architecture</text>
+
+<rect x="100" y="100" width="200" height="60" fill="#e3f2fd"/>
+<text x="200" y="135" text-anchor="middle">SmartShunt (BLE)</text>
+
+<rect x="100" y="200" width="200" height="60" fill="#e8f5e9"/>
+<text x="200" y="235" text-anchor="middle">IP22 Charger (BLE)</text>
+
+<rect x="100" y="300" width="200" height="60" fill="#fff3e0"/>
+<text x="200" y="335" text-anchor="middle">JBD BMS (BLE)</text>
+
+<rect x="400" y="200" width="220" height="80" fill="#f3e5f5"/>
+<text x="510" y="245" text-anchor="middle">ESP32 (ESPHome)</text>
+
+<rect x="700" y="200" width="160" height="80" fill="#ede7f6"/>
+<text x="780" y="245" text-anchor="middle">Home Assistant</text>
+
+<line x1="300" y1="130" x2="400" y2="240" stroke="black"/>
+<line x1="300" y1="230" x2="400" y2="240" stroke="black"/>
+<line x1="300" y1="330" x2="400" y2="240" stroke="black"/>
+<line x1="620" y1="240" x2="700" y2="240" stroke="black"/>
+</svg>

@@ -1,54 +1,214 @@
-# ⚡ Caravan Power Package (v1.0.0)
+# ⚡ Caravan Power
 
-Power monitoring and alerting for a travel trailer / caravan Home Assistant deployment.
+![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Compatible-blue)
+![Package](https://img.shields.io/badge/Type-HA%20Package-green)
+![Status](https://img.shields.io/badge/Status-Stable-brightgreen)
 
-## What you get
 
-### Canonical battery signals
-- `sensor.caravan_battery_voltage` (V)
-- `sensor.caravan_battery_current` (A)
-- `sensor.caravan_battery_power` (W)
-- `sensor.caravan_battery_soc` (%)
-- `sensor.caravan_time_to_go` (min + attributes `hours`, `minutes`)
-- `sensor.caravan_power_source` (Mains / Alternator / Battery / Unknown)
-- `sensor.caravan_battery_ui_status` (OK / CHARGING / ATTENTION)
 
-### Health & freshness
-- `sensor.caravan_power_heartbeat` updates every 30s
-- `binary_sensor.caravan_power_package_healthy` (Problem=ON when heartbeat stale)
-- Freshness signals expected from ESPHome:
-  - `binary_sensor.smartshunt_data_fresh`
-  - `binary_sensor.victron_ip22_data_fresh`
+> Mobile Assistant – Power Subsystem  
+> Structured Victron-based battery monitoring for caravans
 
-## Install
+---
 
-Copy into your repo:
+## 📸 Screenshots
+
+Screenshots are stored in:
 
 ```
-packages/caravan_power/
+packages/caravan_power/screenshots/
 ```
 
-Enable packages (example):
+| Overview | Charging | Battery | Mains |
+|----------|----------|----------|--------|
+| ![](screenshots/power-overview.png) | ![](screenshots/power-charging.png) | ![](screenshots/power-battery.png) | ![](screenshots/power-mains.png) |
+
+---
+
+# 🎯 Overview
+
+The **Caravan Power** package provides a production-ready power intelligence layer for the Mobile Assistant platform.
+
+It unifies battery metrics, charging detection and power source logic into a clean, reusable Home Assistant package.
+
+---
+
+# 🧠 Architecture
+
+## Signal Priority Model
+
+SmartShunt → Primary source  
+BMS → Secondary fallback  
+IP22 → Used only if data fresh  
+
+Freshness entities required:
+
+- `binary_sensor.smartshunt_data_fresh`
+- `binary_sensor.victron_ip22_data_fresh`
+
+---
+
+## Logical Flow
+
+Victron SmartShunt (BLE)  
+Victron IP22 Charger (BLE)  
+JBD / Humsienk BMS (BLE)  
+ESP32 (ESPHome)  
+Home Assistant  
+Caravan Power Package  
+Dashboard + Notifications  
+
+---
+
+# 🔌 Hardware Used
+
+| Component | Purpose |
+|------------|----------|
+| Victron SmartShunt | Authoritative battery measurement |
+| Victron IP22 Charger | Shore charging |
+| JBD / Humsienk BMS | Internal LiFePO4 telemetry |
+| ESP32 (ESPHome) | BLE bridge + freshness tracking |
+| Zigbee Plug | Shore power detection |
+| Home Assistant | Automation + UI layer |
+
+Optional:
+- Victron Orion DC‑DC (alternator charging)
+
+---
+
+# 🔧 Wiring Concept
+
+Diagrams should be placed in:
+
+```
+packages/caravan_power/docs/
+```
+
+Conceptual layout:
+
+230V Shore → IP22 → Battery  
+Battery → SmartShunt → DC Bus → Loads  
+
+SmartShunt must be installed on the negative battery line.  
+ESP32 must be within stable BLE range.
+
+---
+
+# 📁 Folder Structure
+
+```
+packages/
+  caravan_power/
+    caravan_power.yaml
+    README.md
+    SECURITY.md
+    secrets.example.yaml
+    lovelace/
+    esphome/
+    screenshots/
+    docs/
+```
+
+---
+
+# ⚙ Installation
+
+1. Copy folder into:
+
+```
+config/packages/caravan_power/
+```
+
+2. Ensure packages are enabled:
 
 ```yaml
 homeassistant:
   packages: !include_dir_named packages
 ```
 
-Restart Home Assistant.
+3. Restart Home Assistant.
 
-## Lovelace
+---
 
-- `lovelace/caravan-power-subview.yaml` (Power subview baseline; you can expand it)
+# 📊 Exposed Entities
 
-## ESPHome (GitHub-safe)
+## Canonical Battery
 
-- `esphome/caravan-env-1.github.yaml` (sanitized placeholders, no secrets)
+- `sensor.caravan_battery_voltage`
+- `sensor.caravan_battery_current`
+- `sensor.caravan_battery_power`
+- `sensor.caravan_battery_soc`
+- `sensor.caravan_time_to_go`
 
-## Changelog
+## Power Intelligence
 
-### v1.0.0 (2026-02-19)
-- GitHub-ready Power package extraction
-- Standardized freshness entities to:
-  - `binary_sensor.smartshunt_data_fresh`
-  - `binary_sensor.victron_ip22_data_fresh`
+- `sensor.caravan_power_source`
+- `binary_sensor.caravan_mains_present`
+- `binary_sensor.caravan_battery_charging_now`
+- `binary_sensor.caravan_alternator_charging`
+- `binary_sensor.caravan_battery_draining_fast`
+
+## Health
+
+- `sensor.caravan_power_heartbeat`
+- `binary_sensor.caravan_power_package_healthy`
+
+---
+
+# 🚨 Alerts
+
+### Critical Battery
+
+Triggered when:
+
+- SoC = Critical  
+- Not charging  
+- No mains present  
+
+### Draining Fast
+
+Triggered when:
+
+- 15‑minute voltage delta ≤ -0.20V  
+- No active charge source  
+
+---
+
+# 📉 Database Optimization
+
+Implements the **Reduce Sensor Logging DB** strategy:
+
+- Trigger-based templates  
+- Statistics integration (15m delta)  
+- ESPHome delta filtering  
+- Single BLE heartbeat per device  
+
+Result: minimal database churn with high UI responsiveness.
+
+---
+
+# 🔐 Security
+
+This package contains **no secrets**.
+
+See:
+
+- `SECURITY.md`
+- `secrets.example.yaml`
+
+Never commit:
+
+- WiFi credentials  
+- MAC addresses  
+- Bindkeys  
+- API encryption keys  
+- OTA passwords  
+
+---
+
+# 📦 Version
+
+**v1.0.0**  
+Released: 2026-02-19
+
+Initial standalone Power package extraction from the Mobile Assistant project.
