@@ -61,13 +61,15 @@ Front‑only leveling designed specifically for travel trailers:
 
 ---
 
-### ⚡ Power & Energy — *in progress*
+### ⚡ Power & Energy — *implemented (Draft)*
 Power monitoring and alerting focused on off‑grid usage:
 - Battery voltage, current, SOC
 - Charging state awareness
 - Threshold‑based alerts
 - Prepared for AGM → LiFePO₄ upgrades
 - Designed to integrate chargers, DC‑DC, solar later
+
+📁 Package: `packages/caravan_power`
 
 ---
 
