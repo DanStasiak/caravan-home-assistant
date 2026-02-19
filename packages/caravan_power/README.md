@@ -1,10 +1,15 @@
-# Travel Trailer Power (Victron) – Home Assistant Package **Repository:** `caravan-home-assistant` **Package:** `caravan_power` **Version:** `v1.0.0` **Scope:** **Travel trailers / caravans with Victron BLE devices (SmartShunt + IP22) and optional BMS** **Project root:** https://github.com/DanStasiak/caravan-home-assistant
+# Travel Trailer Power (Victron) – Home Assistant Package
+**Repository:** `caravan-home-assistant`
+**Package:** `caravan_power`
+**Version:** `v1.0.0`
+**Scope:** **Travel trailers / caravans with Victron BLE devices (SmartShunt + IP22) and optional BMS**
+**Project root:** https://github.com/DanStasiak/caravan-home-assistant
 
 This package provides a **canonical battery abstraction layer** (**Voltage / Current / Power / SoC / TTG**), **power source intelligence** (**Mains / Alternator / Battery**), **BLE freshness protection**, and **alerting** for real-world caravan deployments.
 
-> ⚠️ This is a **monitoring + alerting system**  
-> ❌ No actuator control  
-> ❌ No inverter / 230V load management (yet)  
+> ⚠️ This is a **monitoring + alerting system**
+> ❌ No actuator control
+> ❌ No inverter / 230V load management (yet)
 > ✅ Designed for low DB churn (“Reduce Sensor Logging DB” pattern)
 
 ---
@@ -52,7 +57,7 @@ This package provides a **canonical battery abstraction layer** (**Voltage / Cur
 **Data flow**
 1. BLE devices broadcast measurements
 2. ESPHome publishes sensors + freshness
-3. HA templates produce canonical signals with deterministic fallback
+3. Home Assistant templates produce canonical signals with deterministic fallback
 4. UI + alerts use only canonical entities
 
 ---
@@ -69,11 +74,11 @@ This package provides a **canonical battery abstraction layer** (**Voltage / Cur
 - **MCU:** **ESP32 Dev Module**
 - **BLE devices:** **Victron SmartShunt**, **Victron IP22**
 - **Optional BMS:** **JBD / Humsienk** (BLE)
-- **Optional env sensors:** **SHT3x**, **SCD4x** (I²C shared bus)
+- **Optional ambient sensors:** **SHT3x**, **SCD4x** (I²C, shared bus)
 
 ### Mains detection
 - **Smart plug / metering plug:** your device (example entity: `switch.plugz01`)
-  - Used to derive `binary_sensor.caravan_mains_present`
+- Used to derive `binary_sensor.caravan_mains_present`
 
 ---
 
@@ -105,13 +110,11 @@ This package is **not installed via HACS**. It is a **YAML package** placed insi
 ```text
 packages/caravan_power/
 ```
-
 2. Ensure packages are enabled:
 ```yaml
 homeassistant:
   packages: !include_dir_named packages
 ```
-
 3. Restart Home Assistant
 
 ---
@@ -120,7 +123,7 @@ homeassistant:
 
 ### Recommended (best)
 Use the provided ESPHome file:
-- `esphome/caravan-env-1.github.yaml` (GitHub-safe placeholders)
+- `esphome/caravan-env-1.github.yaml`
 
 Then set your real values using `secrets.yaml` (see `secrets.example.yaml`).
 
@@ -132,7 +135,7 @@ Then restart Home Assistant to stabilize entity names.
 
 ---
 
-## Lovelace UI Import
+## Lovelace UI Import:
 - `lovelace/caravan-power.yaml`
 
 Mobile-first, large touch targets, Mushroom Square compatible.
@@ -146,8 +149,8 @@ Blueprint:
 
 Features:
 - Alerts on **Critical** and **Draining Fast**
-- Cooldown logic
 - Optional recovery notification
+- Cooldown logic
 - Uses your existing `script.caravan_notify` (or replace with your notifier)
 
 ---

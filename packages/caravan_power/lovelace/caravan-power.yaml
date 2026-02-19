@@ -1,2 +1,765 @@
-## NOTE
-# This is a partial starter. Replace with your full Power view YAML.
+title: Power
+path: caravan-Power
+icon: mdi:power
+type: sections
+subview: true
+max_columns: 1
+dense_section_placement: true
+theme: Mushroom Square
+sections:
+  - type: grid
+    cards:
+      - type: custom:button-card
+        name: Power
+        icon: mdi:power-plug-battery
+        show_state: true
+        show_icon: true
+        show_name: true
+        entity: sensor.caravan_battery_voltage
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/caravan-Power
+        hold_action:
+          action: more-info
+          entity: sensor.caravan_battery_voltage
+        state_display: |
+          [[[
+            const v = parseFloat(states['sensor.caravan_battery_voltage']?.state);
+            const p = parseFloat(states['sensor.caravan_battery_power']?.state);
+            const soc = parseFloat(states['sensor.caravan_battery_soc']?.state);
+
+            const src = (states['sensor.caravan_power_source']?.state || '—');
+            const ui = (states['sensor.caravan_battery_ui_status']?.state || '—');
+
+            const vv = Number.isFinite(v) ? `${v.toFixed(2)} V` : '— V';
+            const pp = Number.isFinite(p) ? `${p.toFixed(0)} W` : '— W';
+            const ss = Number.isFinite(soc) ? `SoC ${soc.toFixed(0)}%` : 'SoC —%';
+
+            // Keep it short and human
+            return `${ss} • ${vv} • ${pp} • ${src} • ${ui}`;
+          ]]]
+        styles:
+          card:
+            - border-radius: 18px
+            - padding: 14px 14px 22px 14px
+            - overflow: hidden
+          grid:
+            - grid-template-areas: ""i n" "i s" "bar bar""
+            - grid-template-columns: 80px 1fr
+            - grid-template-rows: min-content min-content 14px
+            - column-gap: 10px
+            - row-gap: 6px
+          name:
+            - font-size: 18px
+            - font-weight: 800
+            - line-height: 1.1
+            - white-space: normal
+            - overflow-wrap: anywhere
+          state:
+            - font-size: 16px
+            - font-weight: 800
+            - line-height: 1.15
+            - white-space: normal
+            - overflow-wrap: anywhere
+            - word-break: break-word
+          icon:
+            - width: 64px
+        custom_fields:
+          bar: |
+            [[[
+              const soc = parseFloat(states['sensor.caravan_battery_soc']?.state);
+              const clamped = Number.isFinite(soc) ? Math.max(0, Math.min(100, soc)) : 0;
+
+              // Color from UI status attributes
+              const col = (states['sensor.caravan_battery_ui_status']?.attributes?.color || 'blue');
+              let rgb = '0,140,255';
+              if (col === 'green') rgb = '40,200,120';
+              else if (col === 'orange') rgb = '255,150,40';
+              else if (col === 'red') rgb = '255,40,40';
+              else if (col === 'grey') rgb = '120,120,120';
+
+              return `
+                <div style="
+                  height:10px;border-radius:10px;
+                  background: rgba(31,41,55,0.12);
+                  position:relative; overflow:hidden;">
+                  <div style="
+                    height:10px; width:${clamped}%;
+                    background: rgba(${rgb},0.95);
+                    box-shadow: 0 0 12px rgba(${rgb},0.55);
+                    border-radius:10px;">
+                  </div>
+                </div>
+              `;
+            ]]]
+        custom_fields_style:
+          bar:
+            - grid-area: bar
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+          - type: template
+            icon: mdi:battery-high
+            content: >-
+              {% set soc = states('sensor.caravan_battery_soc')|float(none) %}
+              {% if soc is none %}SoC —{% else %}SoC {{ '%.0f'|format(soc) }}%{%
+              endif %}
+            icon_color: >-
+              {% set st = states('sensor.caravan_battery_status') %} {% if st ==
+              'Critical' %} red {% elif st == 'Low' %} orange {% else %} blue {%
+              endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.caravan_battery_soc
+          - type: template
+            icon: mdi:timer-outline
+            content: >-
+              {% set ttg = states('sensor.caravan_time_to_go')|float(none) %} {%
+              if ttg is none %}
+                TTG —
+              {% else %}
+                TTG {{ state_attr('sensor.caravan_time_to_go','hours') }}h
+                {{ '%02d'|format(state_attr('sensor.caravan_time_to_go','minutes')|int(0)) }}m
+              {% endif %}
+            icon_color: >-
+              {% set st = states('sensor.caravan_battery_status') %} {% if st ==
+              'Critical' %} red {% elif st == 'Low' %} orange {% else %} blue {%
+              endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.caravan_time_to_go
+          - type: template
+            icon: mdi:power-plug
+            content: |-
+              {% if is_state('binary_sensor.caravan_mains_present','on') %}
+                Mains ON
+              {% else %}
+                Mains OFF
+              {% endif %}
+            icon_color: >-
+              {% if is_state('binary_sensor.caravan_mains_present','on') %} blue
+              {% else %} grey {% endif %}
+            tap_action:
+              action: more-info
+              entity: binary_sensor.caravan_mains_present
+          - type: entity
+            entity: switch.plugz01
+            content_info: name
+            tap_action:
+              action: toggle
+            name: Charger Power
+            icon: mdi:power
+            use_entity_picture: true
+        grid_options:
+          columns: full
+          rows: 1
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              box-shadow: none !important;
+              border-radius: 18px;
+            }
+            .chip-container { gap: 10px !important; }
+            mushroom-chip { font-weight: 800; }
+      - type: custom:mushroom-select-card
+        entity: input_select.caravan_power_view
+        name: View mode
+        secondary_info: none
+        grid_options:
+          columns: full
+          rows: 1
+        card_mod:
+          style: |
+            ha-card { border-radius: 18px; }
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:button-card
+            entity: sensor.caravan_battery_soc
+            name: SoC
+            icon: mdi:battery
+            show_state: true
+            tap_action:
+              action: more-info
+              entity: sensor.caravan_battery_soc
+            state_display: |
+              [[[
+                const soc = parseFloat(entity?.state);
+                return Number.isFinite(soc) ? `${soc.toFixed(0)} %` : '— %';
+              ]]]
+            styles:
+              card:
+                - border-radius: 18px
+                - padding: 14px
+                - position: relative
+                - overflow: hidden
+              name:
+                - font-size: 14px
+                - font-weight: 800
+              state:
+                - font-size: 20px
+                - font-weight: 900
+                - line-height: 1.1
+              icon:
+                - width: 26px
+            custom_fields:
+              ring: |
+                [[[
+                  const soc = parseFloat(states['sensor.caravan_battery_soc']?.state);
+                  const pct = Number.isFinite(soc) ? Math.max(0, Math.min(100, soc)) : 0;
+
+                  let rgb = '0,140,255';
+                  if (Number.isFinite(soc) && soc <= 15) rgb = '255,40,40';
+                  else if (Number.isFinite(soc) && soc <= 30) rgb = '255,150,40';
+
+                  return `
+                    <div style="
+                      width:86px;height:86px;border-radius:50%;
+                      background:
+                        conic-gradient(rgba(${rgb},0.95) ${pct}%, rgba(31,41,55,0.12) 0);
+                      display:flex;align-items:center;justify-content:center;
+                      box-shadow:0 0 18px rgba(${rgb},0.25);
+                    ">
+                      <div style="
+                        width:64px;height:64px;border-radius:50%;
+                        background: rgba(0,0,0,0.05);
+                        border: 1px solid rgba(255,255,255,0.06);
+                      "></div>
+                    </div>
+                  `;
+                ]]]
+            styles_grid:
+              - grid-template-areas: ""ring i" "ring n" "ring s""
+              - grid-template-columns: 92px 1fr
+              - grid-template-rows: min-content min-content min-content
+              - column-gap: 10px
+              - row-gap: 2px
+            custom_fields_style:
+              ring:
+                - grid-area: ring
+                - align-self: center
+                - justify-self: start
+          - type: custom:button-card
+            entity: sensor.caravan_battery_voltage
+            name: Voltage
+            icon: mdi:flash
+            show_state: true
+            multiline: true
+            multiline_state: true
+            tap_action:
+              action: more-info
+              entity: sensor.caravan_battery_voltage
+            state_display: |
+              [[[
+                const v = parseFloat(entity?.state);
+                return Number.isFinite(v) ? `${v.toFixed(2)} V` : '— V';
+              ]]]
+            custom_fields:
+              ring: |
+                [[[
+                  const v = parseFloat(states['sensor.caravan_battery_voltage']?.state);
+                  // Map 12.0–14.8V -> 0–100%
+                  const pct = Number.isFinite(v) ? Math.max(0, Math.min(100, ((v - 12.0) / (14.8 - 12.0)) * 100)) : 0;
+
+                  let rgb = '0,140,255';
+                  if (Number.isFinite(v) && v < 12.0) rgb = '255,40,40';
+                  else if (Number.isFinite(v) && v < 12.2) rgb = '255,150,40';
+
+                  return `
+                    <div style="
+                      width:86px;height:86px;border-radius:50%;
+                      background:
+                        conic-gradient(rgba(${rgb},0.95) ${pct}%, rgba(31,41,55,0.12) 0);
+                      display:flex;align-items:center;justify-content:center;
+                      box-shadow:0 0 18px rgba(${rgb},0.20);
+                    ">
+                      <div style="
+                        width:64px;height:64px;border-radius:50%;
+                        background: rgba(0,0,0,0.05);
+                        border: 1px solid rgba(255,255,255,0.06);
+                      "></div>
+                    </div>
+                  `;
+                ]]]
+            styles:
+              card:
+                - border-radius: 18px
+                - padding: 14px
+                - position: relative
+                - overflow: hidden
+              name:
+                - font-size: 14px
+                - font-weight: 800
+              state:
+                - font-size: 20px
+                - font-weight: 900
+                - line-height: 1.1
+                - overflow-wrap: anywhere
+              icon:
+                - width: 26px
+            styles_grid:
+              - grid-template-areas: ""ring i" "ring n" "ring s""
+              - grid-template-columns: 92px 1fr
+              - grid-template-rows: min-content min-content min-content
+              - column-gap: 10px
+              - row-gap: 2px
+            custom_fields_style:
+              ring:
+                - grid-area: ring
+                - align-self: center
+                - justify-self: start
+          - type: custom:button-card
+            entity: sensor.caravan_battery_power
+            name: Power
+            icon: mdi:lightning-bolt
+            show_state: true
+            tap_action:
+              action: more-info
+              entity: sensor.caravan_battery_power
+            state_display: |
+              [[[
+                const p = parseFloat(entity?.state);
+                return Number.isFinite(p) ? `${p.toFixed(0)} W` : '— W';
+              ]]]
+            custom_fields:
+              ring: |
+                [[[
+                  const p = parseFloat(states['sensor.caravan_battery_power']?.state);
+                  // Map -600..+600W -> 0..100% (absolute intensity)
+                  const pct = Number.isFinite(p) ? Math.max(0, Math.min(100, (Math.min(600, Math.abs(p)) / 600) * 100)) : 0;
+
+                  // Orange when discharging hard (negative power), blue otherwise
+                  let rgb = '0,140,255';
+                  if (Number.isFinite(p) && p < -250) rgb = '255,150,40';
+                  if (Number.isFinite(p) && p < -450) rgb = '255,40,40';
+
+                  return `
+                    <div style="
+                      width:86px;height:86px;border-radius:50%;
+                      background:
+                        conic-gradient(rgba(${rgb},0.95) ${pct}%, rgba(31,41,55,0.12) 0);
+                      display:flex;align-items:center;justify-content:center;
+                      box-shadow:0 0 18px rgba(${rgb},0.20);
+                    ">
+                      <div style="
+                        width:64px;height:64px;border-radius:50%;
+                        background: rgba(0,0,0,0.05);
+                        border: 1px solid rgba(255,255,255,0.06);
+                      "></div>
+                    </div>
+                  `;
+                ]]]
+            styles:
+              card:
+                - border-radius: 18px
+                - padding: 14px
+                - position: relative
+                - overflow: hidden
+              name:
+                - font-size: 14px
+                - font-weight: 800
+              state:
+                - font-size: 20px
+                - font-weight: 900
+                - line-height: 1.1
+              icon:
+                - width: 26px
+            styles_grid:
+              - grid-template-areas: ""ring i" "ring n" "ring s""
+              - grid-template-columns: 92px 1fr
+              - grid-template-rows: min-content min-content min-content
+              - column-gap: 10px
+              - row-gap: 2px
+            custom_fields_style:
+              ring:
+                - grid-area: ring
+                - align-self: center
+                - justify-self: start
+          - type: custom:button-card
+            entity: sensor.caravan_time_to_go
+            name: Time to go
+            icon: mdi:timer-outline
+            show_state: true
+            multiline: true
+            multiline_state: true
+            tap_action:
+              action: more-info
+              entity: sensor.caravan_time_to_go
+            state_display: |
+              [[[
+                const h = states['sensor.caravan_time_to_go']?.attributes?.hours;
+                const m = states['sensor.caravan_time_to_go']?.attributes?.minutes;
+                if (h === undefined || m === undefined) return '—';
+                const mm = String(parseInt(m,10)).padStart(2,'0');
+                return `${h}h ${mm}m`;
+              ]]]
+            custom_fields:
+              ring: |
+                [[[
+                  // Map TTG 0..24h to 0..100%
+                  const h = parseFloat(states['sensor.caravan_time_to_go']?.attributes?.hours);
+                  const m = parseFloat(states['sensor.caravan_time_to_go']?.attributes?.minutes);
+                  const ttgH = (Number.isFinite(h) && Number.isFinite(m)) ? (h + (m/60)) : 0;
+                  const pct = Math.max(0, Math.min(100, (Math.min(24, ttgH)/24)*100));
+
+                  let rgb = '0,140,255';
+                  if (ttgH > 0 && ttgH <= 4) rgb = '255,40,40';
+                  else if (ttgH > 0 && ttgH <= 8) rgb = '255,150,40';
+
+                  return `
+                    <div style="
+                      width:86px;height:86px;border-radius:50%;
+                      background:
+                        conic-gradient(rgba(${rgb},0.95) ${pct}%, rgba(31,41,55,0.12) 0);
+                      display:flex;align-items:center;justify-content:center;
+                      box-shadow:0 0 18px rgba(${rgb},0.20);
+                    ">
+                      <div style="
+                        width:64px;height:64px;border-radius:50%;
+                        background: rgba(0,0,0,0.05);
+                        border: 1px solid rgba(255,255,255,0.06);
+                      "></div>
+                    </div>
+                  `;
+                ]]]
+            styles:
+              card:
+                - border-radius: 18px
+                - padding: 14px
+                - position: relative
+                - overflow: hidden
+              name:
+                - font-size: 14px
+                - font-weight: 800
+                - white-space: normal
+                - overflow-wrap: anywhere
+              state:
+                - font-size: 20px
+                - font-weight: 900
+                - line-height: 1.1
+                - white-space: normal
+                - overflow-wrap: anywhere
+              icon:
+                - width: 26px
+            styles_grid:
+              - grid-template-areas: ""ring i" "ring n" "ring s""
+              - grid-template-columns: 92px 1fr
+              - grid-template-rows: min-content min-content min-content
+              - column-gap: 10px
+              - row-gap: 2px
+            custom_fields_style:
+              ring:
+                - grid-area: ring
+                - align-self: center
+                - justify-self: start
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: Battery trend (24h)
+          show_states: false
+        graph_span: 24h
+        span:
+          start: hour
+        apex_config:
+          chart:
+            height: 220
+            toolbar:
+              show: false
+          stroke:
+            width: 2
+          legend:
+            show: false
+          xaxis:
+            labels:
+              show: false
+          yaxis:
+            decimalsInFloat: 1
+        series:
+          - entity: sensor.caravan_battery_soc
+            name: SoC (%)
+            type: area
+            group_by:
+              duration: 15m
+              func: avg
+          - entity: sensor.caravan_battery_voltage
+            name: Voltage (V)
+            type: line
+            group_by:
+              duration: 15m
+              func: avg
+          - entity: sensor.caravan_battery_power
+            name: Power (W)
+            type: line
+            group_by:
+              duration: 15m
+              func: avg
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_select.caravan_power_view
+            state: Auto
+          - condition: state
+            entity: binary_sensor.caravan_mains_present
+            state: "on"
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-template-card
+              primary: Charging details
+              secondary: >-
+                {{ states('sensor.caravan_charging_phase') }} • {{
+                states('sensor.caravan_env_1_victron_charger_error') }} • {{
+                states('sensor.caravan_env_1_victron_temperature') }}
+              icon: mdi:power-plug
+              multiline_secondary: true
+              card_mod:
+                style: |
+                  ha-card { border-radius: 18px; }
+                  mushroom-state-info, .secondary {
+                    white-space: normal !important;
+                    overflow-wrap: anywhere !important;
+                    word-break: break-word !important;
+                  }
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Charger trend (12h)
+                show_states: false
+              graph_span: 12h
+              apex_config:
+                chart:
+                  height: 220
+                  toolbar:
+                    show: false
+                legend:
+                  show: false
+                xaxis:
+                  labels:
+                    show: false
+              series:
+                - entity: sensor.caravan_battery_voltage
+                  name: Voltage (V)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_current
+                  name: Current (A)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_power
+                  name: Power (W)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_select.caravan_power_view
+            state: Auto
+          - condition: state
+            entity: binary_sensor.caravan_mains_present
+            state: "off"
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Battery trend (12h)
+                show_states: false
+              graph_span: 12h
+              apex_config:
+                chart:
+                  height: 220
+                  toolbar:
+                    show: false
+                legend:
+                  show: false
+                xaxis:
+                  labels:
+                    show: false
+              series:
+                - entity: sensor.caravan_battery_soc
+                  name: SoC (%)
+                  type: area
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_voltage
+                  name: Voltage (V)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_power
+                  name: Power (W)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: SmartShunt (24h)
+                show_states: false
+              graph_span: 24h
+              apex_config:
+                chart:
+                  height: 220
+                  toolbar:
+                    show: false
+                legend:
+                  show: false
+                xaxis:
+                  labels:
+                    show: false
+              series:
+                - entity: sensor.caravan_consumed_ah
+                  name: Consumed (Ah)
+                  type: line
+                  group_by:
+                    duration: 30m
+                    func: avg
+                - entity: sensor.caravan_time_to_go
+                  name: TTG (min)
+                  type: line
+                  group_by:
+                    duration: 30m
+                    func: avg
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_select.caravan_power_view
+            state: Battery
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Battery trend (12h)
+                show_states: false
+              graph_span: 12h
+              apex_config:
+                chart:
+                  height: 220
+                  toolbar:
+                    show: false
+                legend:
+                  show: false
+                xaxis:
+                  labels:
+                    show: false
+              series:
+                - entity: sensor.caravan_battery_soc
+                  name: SoC (%)
+                  type: area
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_voltage
+                  name: Voltage (V)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_power
+                  name: Power (W)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: SmartShunt (24h)
+                show_states: false
+              graph_span: 24h
+              apex_config:
+                chart:
+                  height: 220
+                  toolbar:
+                    show: false
+                legend:
+                  show: false
+                xaxis:
+                  labels:
+                    show: false
+              series:
+                - entity: sensor.caravan_consumed_ah
+                  name: Consumed (Ah)
+                  type: line
+                  group_by:
+                    duration: 30m
+                    func: avg
+                - entity: sensor.caravan_time_to_go
+                  name: TTG (min)
+                  type: line
+                  group_by:
+                    duration: 30m
+                    func: avg
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_select.caravan_power_view
+            state: 220V
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-template-card
+              primary: 220V / Charger view
+              secondary: >-
+                {{ states('sensor.caravan_power_source') }} • {{
+                states('sensor.caravan_charging_phase') }}
+              icon: mdi:power-plug
+              multiline_secondary: true
+              card_mod:
+                style: |
+                  ha-card { border-radius: 18px; }
+                  mushroom-state-info, .secondary {
+                    white-space: normal !important;
+                    overflow-wrap: anywhere !important;
+                    word-break: break-word !important;
+                  }
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Charger trend (12h)
+                show_states: false
+              graph_span: 12h
+              apex_config:
+                chart:
+                  height: 220
+                  toolbar:
+                    show: false
+                legend:
+                  show: false
+                xaxis:
+                  labels:
+                    show: false
+              series:
+                - entity: sensor.caravan_battery_voltage
+                  name: Voltage (V)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_current
+                  name: Current (A)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+                - entity: sensor.caravan_battery_power
+                  name: Power (W)
+                  type: line
+                  group_by:
+                    duration: 10m
+                    func: avg
+cards: []

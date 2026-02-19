@@ -1,1 +1,334 @@
-# sanitized ESPHome config
+esphome:
+  name: caravan-env-1
+  friendly_name: Caravan Env 1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "caravan-env-1"
+    password: !secret wifi_ap_password
+
+logger:
+  level: INFO
+  logs:
+    victron_ble.sensor: ERROR
+
+api:
+
+captive_portal:
+
+ota:
+  - platform: esphome
+
+# --- Bluetooth Proxy (for Hobby/Truma work later)
+# NOTE: In lab, this can steal BLE airtime/slots and cause data flapping.
+# Keep active=true only if you actually need proxy right now.
+bluetooth_proxy:
+  active: true
+
+# ============================================================
+# External Components
+# ============================================================
+external_components:
+  - source: github://Fabian-Schmidt/esphome-victron_ble
+  - source: github://syssi/esphome-jbd-bms
+
+# ============================================================
+# Victron BLE devices
+# ============================================================
+victron_ble:
+  - id: victron_ip22
+    mac_address: !secret victron_ip22_mac
+    bindkey: !secret victron_ip22_bindkey
+
+  - id: victron_smartshunt
+    mac_address: !secret victron_smartshunt_mac
+    bindkey: !secret victron_smartshunt_bindkey
+
+# ============================================================
+# BLE stack
+# ============================================================
+# max_connections must cover: bluetooth_proxy + 2x victron_ble + ble_client (BMS) = 4
+# You already set 5, which is fine and leaves headroom for future devices.
+esp32_ble:
+  max_connections: 5
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+    interval: 1100ms
+    window: 300ms
+
+# ============================================================
+# BMS (JBD over BLE client)
+# ============================================================
+ble_client:
+  - id: humsienk_bms
+    mac_address: !secret bms_mac
+
+jbd_bms_ble:
+  - id: bms0
+    ble_client_id: humsienk_bms
+    update_interval: 20s
+
+# ============================================================
+# I2C
+# ============================================================
+i2c:
+  id: bus_a
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+# ------------------------------------------------------------
+# Freshness tracking timestamps
+# IMPORTANT:
+# We keep force_update ONLY on one "heartbeat" sensor per device
+# to ensure on_value triggers regularly and last_seen_ms stays fresh,
+# while filtering other metrics with deltas to prevent DB churn.
+# ------------------------------------------------------------
+globals:
+  - id: last_ip22_seen_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+
+  - id: last_shunt_seen_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+
+# ------------------------------------------------------------
+# Binary sensors published on a timer (no PollingComponent needed)
+# Timeout increased to 5 minutes to avoid flapping on sparse adverts.
+# ------------------------------------------------------------
+binary_sensor:
+  - platform: template
+    id: victron_ip22_data_fresh
+    name: "Victron IP22 Data Fresh"
+    icon: mdi:bluetooth-connect
+
+  - platform: template
+    id: smartshunt_data_fresh
+    name: "SmartShunt Data Fresh"
+    icon: mdi:bluetooth-connect
+
+interval:
+  - interval: 5s
+    then:
+      - lambda: |-
+          const uint32_t now_ms = millis();
+          const bool ip22_ok  = (id(last_ip22_seen_ms)  != 0) && ((now_ms - id(last_ip22_seen_ms))  < 300000);
+          const bool shunt_ok = (id(last_shunt_seen_ms) != 0) && ((now_ms - id(last_shunt_seen_ms)) < 300000);
+          id(victron_ip22_data_fresh).publish_state(ip22_ok);
+          id(smartshunt_data_fresh).publish_state(shunt_ok);
+
+sensor:
+  # ============================================================
+  # SHT31-D
+  # ============================================================
+  - platform: sht3xd
+    i2c_id: bus_a
+    address: 0x44
+    temperature:
+      name: "Caravan Temperature"
+      id: caravan_temperature
+      accuracy_decimals: 1
+      filters:
+        - offset: -6.0
+        - sliding_window_moving_average:
+            window_size: 6
+            send_every: 1
+        - delta: 0.2
+    humidity:
+      name: "Caravan Humidity"
+      id: caravan_humidity
+      accuracy_decimals: 0
+      filters:
+        - offset: 4.0
+        - sliding_window_moving_average:
+            window_size: 6
+            send_every: 1
+        - delta: 1.0
+    heater_enabled: false
+    update_interval: 30s
+
+  # ============================================================
+  # SCD4x
+  # ============================================================
+  - platform: scd4x
+    i2c_id: bus_a
+    address: 0x62
+    co2:
+      name: "Caravan CO2"
+      id: caravan_co2
+      accuracy_decimals: 0
+      filters:
+        - delta: 25
+    temperature:
+      name: "Caravan CO2 Temperature"
+      id: caravan_co2_temperature
+      accuracy_decimals: 1
+      filters:
+        - offset: -6.0
+        - delta: 0.2
+    humidity:
+      name: "Caravan CO2 Humidity"
+      id: caravan_co2_humidity
+      accuracy_decimals: 0
+      filters:
+        - offset: -50.0
+        - delta: 1.0
+    update_interval: 30s
+
+  # ============================================================
+  # Victron IP22 BLE sensors
+  # Heartbeat: force_update only here
+  # ============================================================
+  - platform: victron_ble
+    victron_ble_id: victron_ip22
+    type: device_state
+    name: "Victron Device State"
+    force_update: true
+    on_value:
+      then:
+        - lambda: |-
+            id(last_ip22_seen_ms) = millis();
+
+  - platform: victron_ble
+    victron_ble_id: victron_ip22
+    type: battery_voltage
+    name: "Victron Battery Voltage"
+    filters:
+      - delta: 0.10
+
+  - platform: victron_ble
+    victron_ble_id: victron_ip22
+    type: battery_current
+    name: "Victron Battery Current"
+    filters:
+      - delta: 0.5
+
+  - platform: victron_ble
+    victron_ble_id: victron_ip22
+    type: battery_power
+    name: "Victron Battery Power"
+    filters:
+      - delta: 10.0
+
+  - platform: victron_ble
+    victron_ble_id: victron_ip22
+    type: charger_error
+    name: "Victron Charger Error"
+
+  - platform: victron_ble
+    victron_ble_id: victron_ip22
+    type: temperature
+    name: "Victron Temperature"
+    filters:
+      - delta: 1.0
+
+  # ============================================================
+  # Victron SmartShunt BLE sensors
+  # Heartbeat: force_update only on battery_voltage
+  # ============================================================
+  - platform: victron_ble
+    victron_ble_id: victron_smartshunt
+    type: battery_voltage
+    name: "SmartShunt Battery Voltage"
+    force_update: true
+    filters:
+      - delta: 0.10
+    on_value:
+      then:
+        - lambda: |-
+            id(last_shunt_seen_ms) = millis();
+
+  - platform: victron_ble
+    victron_ble_id: victron_smartshunt
+    type: battery_current
+    name: "SmartShunt Battery Current"
+    filters:
+      - delta: 0.5
+
+  - platform: victron_ble
+    victron_ble_id: victron_smartshunt
+    type: battery_power
+    name: "SmartShunt Battery Power"
+    filters:
+      - delta: 10.0
+
+  - platform: victron_ble
+    victron_ble_id: victron_smartshunt
+    type: state_of_charge
+    name: "SmartShunt SoC"
+    filters:
+      - delta: 0.2
+
+  - platform: victron_ble
+    victron_ble_id: victron_smartshunt
+    type: consumed_ah
+    name: "SmartShunt Consumed Ah"
+    filters:
+      - delta: 0.2
+
+  - platform: victron_ble
+    victron_ble_id: victron_smartshunt
+    type: time_to_go
+    name: "SmartShunt Time To Go"
+    filters:
+      - delta: 5.0
+
+  # ============================================================
+  # Humsienk JBD BMS
+  # ============================================================
+  - platform: jbd_bms_ble
+    jbd_bms_ble_id: bms0
+
+    total_voltage:
+      name: "Humsienk Total Voltage"
+
+    current:
+      name: "Humsienk Current"
+
+    power:
+      name: "Humsienk Power"
+
+    state_of_charge:
+      name: "Humsienk SoC"
+
+    capacity_remaining:
+      name: "Humsienk Capacity Remaining"
+
+    temperature_1:
+      name: "Humsienk Temperature 1"
+
+  # ============================================================
+  # ESP Standard
+  # ============================================================
+  - platform: wifi_signal
+    name: "Caravan Env WiFi Signal"
+    update_interval: 300s
+
+  - platform: uptime
+    name: "Caravan Env Uptime"
+    update_interval: 300s
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "Caravan Env IP"
+    ssid:
+      name: "Caravan Env SSID"
+
+  - platform: template
+    name: "SafeTire Last Frame (raw)"
+    id: safetire_last_frame
+    icon: mdi:bluetooth
+    update_interval: never
