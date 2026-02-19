@@ -1,0 +1,104 @@
+esphome:
+  name: caravan-env-1
+  friendly_name: Caravan Env 1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: "Enter_WiFi_SSID_here"
+  password: "Enter_WiFi_Password_here"
+  ap:
+    ssid: "caravan-env-1"
+    password: "Enter_Fallback_AP_Password_here"
+
+logger:
+  level: INFO
+  logs:
+    victron_ble.sensor: ERROR
+
+api:
+  # encryption:
+  #   key: "Enter_API_Encryption_Key_here"
+
+captive_portal:
+
+ota:
+  - platform: esphome
+    # password: "Enter_OTA_Password_here"
+
+bluetooth_proxy:
+  active: true
+
+external_components:
+  - source: github://Fabian-Schmidt/esphome-victron_ble
+  - source: github://syssi/esphome-jbd-bms
+
+victron_ble:
+  - id: victron_ip22
+    mac_address: "Enter_Victron_IP22_MAC_here"
+    bindkey: "Enter_Victron_IP22_BindKey_here"
+
+  - id: victron_smartshunt
+    mac_address: "Enter_SmartShunt_MAC_here"
+    bindkey: "Enter_SmartShunt_BindKey_here"
+
+esp32_ble:
+  max_connections: 5
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+    interval: 1100ms
+    window: 300ms
+
+ble_client:
+  - id: humsienk_bms
+    mac_address: "Enter_BMS_MAC_here"
+
+jbd_bms_ble:
+  - id: bms0
+    ble_client_id: humsienk_bms
+    update_interval: 20s
+
+i2c:
+  id: bus_a
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+globals:
+  - id: last_ip22_seen_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+
+  - id: last_shunt_seen_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+
+binary_sensor:
+  - platform: template
+    id: victron_ip22_data_fresh
+    name: "Victron IP22 Data Fresh"
+    icon: mdi:bluetooth-connect
+
+  - platform: template
+    id: smartshunt_data_fresh
+    name: "SmartShunt Data Fresh"
+    icon: mdi:bluetooth-connect
+
+interval:
+  - interval: 5s
+    then:
+      - lambda: |-
+          const uint32_t now_ms = millis();
+          const bool ip22_ok  = (id(last_ip22_seen_ms)  != 0) && ((now_ms - id(last_ip22_seen_ms))  < 300000);
+          const bool shunt_ok = (id(last_shunt_seen_ms) != 0) && ((now_ms - id(last_shunt_seen_ms)) < 300000);
+          id(victron_ip22_data_fresh).publish_state(ip22_ok);
+          id(smartshunt_data_fresh).publish_state(shunt_ok);
+
+# (rest unchanged; see your private node config for full sensors)
